@@ -451,13 +451,13 @@ function renderUserOrderStatus() {
 }
 
 /* ==========================================================================
-   FUNGSI MODAL ALAMAT TERSTRUKTUR + PILIH TITIK LOKASI MAPS (STYLE SHOPEE)
+   FUNGSI MODAL ALAMAT TERSTRUKTUR + PILIH TITIK LOKASI MAPS (VERSI FIX POP-UP)
    ========================================================================== */
 
 let hyvaMap = null;
 let hyvaMarker = null;
 
-// 1. Fungsi Membuka Modal Alamat Terstruktur
+// 1. Fungsi Membuka Modal Alamat Terstruktur (Style Shopee)
 function openAddressModal() {
     let addressModal = document.getElementById('address-modal');
     const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
@@ -476,6 +476,9 @@ function openAddressModal() {
         if (currentUser.structuredAddress.lat && currentUser.structuredAddress.lng) {
             koordinatText = `${currentUser.structuredAddress.lat}, ${currentUser.structuredAddress.lng}`;
         }
+    } else if (detailAlamat && detailAlamat.includes("KOTA/KEC:")) {
+        // Jika data lama berupa gabungan teks, bersihkan pemformatannya agar tidak merusak form baru
+        detailAlamat = detailAlamat.split(', KOTA/KEC:')[0];
     }
 
     if (!addressModal) {
@@ -530,15 +533,15 @@ function openAddressModal() {
             </div>
 
             <div class="logout-actions" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="btn-login-tokped" onclick="closeAddressModal()" style="padding: 10px 20px; background: #f5f5f5; color: #333; border: 1px solid #ddd; min-width: auto; cursor: pointer; font-size: 12px;">BATAL</button>
-                <button class="btn-register-tokped" onclick="saveUserAddress()" style="padding: 10px 25px; background: #000; color: #fff; min-width: auto; cursor: pointer; font-size: 12px;">SIMPAN</button>
+                <button type="button" class="btn-login-tokped" onclick="closeAddressModal()" style="padding: 10px 20px; background: #f5f5f5; color: #333; border: 1px solid #ddd; min-width: auto; cursor: pointer; font-size: 12px;">BATAL</button>
+                <button type="button" class="btn-register-tokped" onclick="saveUserAddress()" style="padding: 10px 25px; background: #000; color: #fff; min-width: auto; cursor: pointer; font-size: 12px;">SIMPAN</button>
             </div>
         </div>
     `;
     addressModal.style.display = 'flex';
 }
 
-// 2. Fungsi Menampilkan Peta Interaktif & Melacak Lokasi Otomatis
+// 2. Menampilkan Peta Interaktif Leaflet
 function aktifkanPetaInteraktif() {
     const mapContainer = document.getElementById('hyva-map-container');
     const mapHint = document.getElementById('map-hint');
@@ -547,11 +550,9 @@ function aktifkanPetaInteraktif() {
     mapContainer.style.display = 'block';
     mapHint.style.display = 'block';
 
-    // Koordinat Pusat Awal default (Mojokerto: -7.4705, 112.4401)
     let defaultLat = -7.4705;
     let defaultLng = 112.4401;
 
-    // Coba deteksi jika user sudah punya koordinat tersimpan sebelumnya
     const coordsInput = document.getElementById('addr-koordinat').value;
     if (coordsInput) {
         const splitCoords = coordsInput.split(',');
@@ -561,88 +562,93 @@ function aktifkanPetaInteraktif() {
         }
     }
 
-    // Inisialisasi Engine OpenStreetMap Leaflet jika belum pernah dibuat
     if (hyvaMap === null) {
         hyvaMap = L.map('hyva-map-container').setView([defaultLat, defaultLng], 15);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; Hyva Arvm'
+            attribution: '© Hyva Arvm'
         }).addTo(hyvaMap);
 
-        // Buat Penanda Pin Merah yang Bisa Digeser (Draggable)
         hyvaMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(hyvaMap);
 
-        // Fungsi ketika Pin Selesai Digeser oleh pelanggan
-        hyvaMarker.on('dragend', function (e) {
+        hyvaMarker.on('dragend', function () {
             const position = hyvaMarker.getLatLng();
             updateKoordinatForm(position.lat, position.lng);
         });
 
-        // Fungsi klik langsung pada area peta untuk memindahkan pin
         hyvaMap.on('click', function (e) {
             hyvaMarker.setLatLng(e.latlng);
             updateKoordinatForm(e.latlng.lat, e.latlng.lng);
         });
     } else {
-        // Jika peta sudah ada, set ulang posisi pin
         hyvaMap.invalidateSize();
         hyvaMap.setView([defaultLat, defaultLng], 15);
         hyvaMarker.setLatLng([defaultLat, defaultLng]);
     }
 
-    // Opsi Canggih: Minta izin GPS perangkat pengguna agar langsung auto-lock lokasi akurat saat ini
     if (navigator.geolocation && !coordsInput) {
         navigator.geolocation.getCurrentPosition(function (position) {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
-            hyvaMap.setView([userLat, userLng], 17);
-            hyvaMarker.setLatLng([userLat, userLng]);
-            updateKoordinatForm(userLat, userLng);
+            if(hyvaMap) {
+                hyvaMap.setView([userLat, userLng], 17);
+                hyvaMarker.setLatLng([userLat, userLng]);
+                updateKoordinatForm(userLat, userLng);
+            }
         }, function() {
-            // Abaikan jika GPS ditolak browser, gunakan default Mojokerto
+            updateKoordinatForm(defaultLat, defaultLng);
         });
     } else {
         updateKoordinatForm(defaultLat, defaultLng);
     }
 }
 
-// 3. Update Nilai Input Teks Koordinat & Ambil Nama Jalan Otomatis (Reverse Geocoding)
+// 3. Sinkronisasi Teks Koordinat & Ambil Lokasi Wilayah Otomatis
 function updateKoordinatForm(lat, lng) {
     const fixedLat = lat.toFixed(6);
     const fixedLng = lng.toFixed(6);
-    document.getElementById('addr-koordinat').value = `${fixedLat}, ${fixedLng}`;
+    const elKoor = document.getElementById('addr-koordinat');
+    if (elKoor) elKoor.value = `${fixedLat}, ${fixedLng}`;
 
-    // Menggunakan API Nominatim OpenStreetMap Gratis untuk mendeteksi nama jalan otomatis berdasarkan pin
     fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${fixedLat}&lon=${fixedLng}`)
         .then(response => response.json())
         .then(data => {
             if (data && data.address) {
-                // Isi field Kota/Kecamatan otomatis jika kosong
                 const kecamatan = data.address.subdistrict || data.address.village || "";
                 const kota = data.address.city || data.address.regency || "";
                 const kodePos = data.address.postcode || "";
+                const elKotaKec = document.getElementById('addr-kotakec');
                 
-                if (kecamatan || kota) {
-                    document.getElementById('addr-kotakec').value = `${kecamatan}, ${kota} ${kodePos}`.trim().replace(/^,|,$/, '');
+                if (elKotaKec && (kecamatan || kota)) {
+                    elKotaKec.value = `${kecamatan}, ${kota} ${kodePos}`.trim().replace(/^,|,$/, '');
                 }
             }
-        }).catch(err => console.log("Gagal memuat detail otomatis nama jalan"));
+        }).catch(err => console.log("Gagal reverse geocoding"));
 }
 
-// 4. Fungsi Menutup Modal Alamat & Reset Peta
+// 4. Menutup Modal Alamat & Bersihkan Instance Peta
 function closeAddressModal() {
     const addressModal = document.getElementById('address-modal');
     if (addressModal) addressModal.style.display = 'none';
-    hyvaMap = null; // Reset instance peta agar bisa di-render ulang dengan bersih nanti
+    hyvaMap = null; 
 }
 
-// 5. Fungsi Menyimpan Data Terstruktur + Link Google Maps Koordinat ke Database & WA
+// 5. EKSEKUSI PENYIMPANAN AMAN DAN PENUTUPAN MODAL (ANTI-CRASH)
 function saveUserAddress() {
-    const nama = document.getElementById('addr-nama').value.trim();
-    const telepon = document.getElementById('addr-telepon').value.trim();
-    const kotaKec = document.getElementById('addr-kotakec').value.trim();
-    const detailAlamat = document.getElementById('addr-detail').value.trim();
-    const koordinatText = document.getElementById('addr-koordinat').value.trim();
+    // Ambil semua elemen DOM secara aman dengan pelindung ganda
+    const elNama = document.getElementById('addr-nama');
+    const elTelepon = document.getElementById('addr-telepon');
+    const elKotaKec = document.getElementById('addr-kotakec');
+    const elDetail = document.getElementById('addr-detail');
+    const elKoor = document.getElementById('addr-koordinat');
+
+    if (!elNama || !elTelepon || !elKotaKec || !elDetail) return;
+
+    const nama = elNama.value.trim();
+    const telepon = elTelepon.value.trim();
+    const kotaKec = elKotaKec.value.trim();
+    const detailAlamat = elDetail.value.trim();
+    const koordinatText = elKoor ? elKoor.value.trim() : "";
 
     if (!nama || !telepon || !kotaKec || !detailAlamat) {
         if (typeof showHyvaToast === "function") {
@@ -654,24 +660,26 @@ function saveUserAddress() {
     }
 
     let lat = "", lng = "", mapsLink = "";
-    if (koordinatText) {
+    if (koordinatText && koordinatText.includes(',')) {
         const parts = koordinatText.split(',');
         lat = parts[0].trim();
         lng = parts[1].trim();
-        // Generate Link Google Maps aktif untuk mempermudah Admin Klik & langsung mengarah ke Kurir Paket
         mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
     }
 
-    // Gabungkan teks terstruktur rapi untuk dipasok ke Nota Pembelian Chat WhatsApp Admin
+    // Pembuatan string baris tunggal rapi untuk dikirimkan via WA chat admin
     let alamatGabunganLengkap = `${nama} (${telepon}), ${detailAlamat}, ${kotaKec}`;
     if (mapsLink) {
-        alamatGabunganLengkap += `\n📍 Titik Lokasi Peta: ${mapsLink}`;
+        alamatGabunganLengkap += `\n📍 Link Peta: ${mapsLink}`;
     }
 
     let currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
-    if (!currentUser) return;
+    if (!currentUser) {
+        if (typeof showHyvaToast === "function") showHyvaToast("Silakan login dulu ya Kak!", "fas fa-user-lock");
+        return;
+    }
 
-    // Simpan ke Sesi Aktif
+    // Tulis ke data sesi user saat ini
     currentUser.address = alamatGabunganLengkap;
     currentUser.structuredAddress = {
         nama: nama,
@@ -684,7 +692,7 @@ function saveUserAddress() {
     };
     localStorage.setItem('hyva_logged_in_user', JSON.stringify(currentUser));
 
-    // Sinkronkan Permanen ke Database User Toko
+    // Sinkronkan ke database utama akun
     let allUsers = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
     let userIndex = allUsers.findIndex(u => u.email === currentUser.email || u.phone === currentUser.phone);
     if (userIndex !== -1) {
@@ -693,12 +701,14 @@ function saveUserAddress() {
         localStorage.setItem('hyva_users_database', JSON.stringify(allUsers));
     }
 
+    // TUTUP POPUP DENGAN MULUS
     closeAddressModal();
 
     if (typeof showHyvaToast === "function") {
         showHyvaToast("Alamat & Titik Koordinat Rumah Berhasil Disimpan 📍✨", "fas fa-check-circle");
     }
 
+    // Refresh halaman atau perbarui section order tracking secara otomatis
     if (typeof renderOrderTracking === "function") {
         renderOrderTracking();
     } else {
