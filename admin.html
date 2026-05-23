@@ -6,9 +6,10 @@
     <title>Admin Dashboard | Hyva Arvm</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #f4f7f6; padding: 20px; font-family: 'Montserrat', sans-serif; }
-        .admin-container { max-width: 1250px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .admin-container { max-width: 1350px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #a68b5c; padding-bottom: 15px; margin-bottom: 30px; }
         
         .admin-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
@@ -17,6 +18,10 @@
         
         .admin-section { display: none; }
         .admin-section.active { display: block; }
+        
+        /* Layout Grid untuk Grafik Analisis */
+        .analytics-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: #fff; border: 1px solid #e1d8c7; padding: 20px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
         th { background-color: #1a1a1a; color: white; padding: 12px; text-align: left; font-size: 13px; }
@@ -38,8 +43,6 @@
         .form-grid-shipping { font-size: 11px; color: #555; background: #fdfaf4; padding: 8px; border-radius: 4px; border-left: 3px solid #a68b5c; margin-top: 5px; line-height: 1.4; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #444; }
-        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-        .product-img-preview { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; }
         .logout-link { color: #e74c3c; cursor: pointer; text-decoration: none; font-weight: bold; margin-left: 15px; }
     </style>
 </head>
@@ -55,12 +58,28 @@
     </div>
 
     <div class="admin-nav">
-        <button class="nav-tab active" onclick="switchTab('tab-orders', this)"><i class="fas fa-shipping-fast"></i> Kelola & Atur Pengiriman</button>
+        <button class="nav-tab active" onclick="switchTab('tab-orders', this)"><i class="fas fa-chart-bar"></i> Analisis & Manajemen Pengiriman</button>
         <button class="nav-tab" onclick="switchTab('tab-products', this)"><i class="fas fa-boxes"></i> Manajemen Katalog Produk</button>
         <button class="nav-tab" onclick="switchTab('tab-users', this)"><i class="fas fa-users"></i> Daftar Pelanggan Terdaftar</button>
     </div>
 
     <div id="tab-orders" class="admin-section active">
+        <div class="analytics-grid">
+            <div class="chart-card">
+                <h4 style="margin-bottom:15px; color:#2c3e50;"><i class="fas fa-fire"></i> Grafik Produk Terlaris (Paling Banyak Dibeli)</h4>
+                <div style="position: relative; height:260px; width:100%;">
+                    <canvas id="productsChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card" style="text-align: center; display: flex; flex-direction: column; justify-content: center;">
+                <h4 style="color:#7f8c8d; margin-bottom: 5px;">Total Omset Penjualan</h4>
+                <h2 id="total-revenue-label" style="font-size: 28px; color:#a68b5c; margin: 0 0 15px 0;">Rp 0</h2>
+                <hr style="border:0; border-top:1px solid #eee; margin-bottom:15px;">
+                <h5 style="color:#7f8c8d; margin-bottom: 5px;">Total Paket Diproses</h5>
+                <h2 id="total-orders-label" style="font-size: 24px; color:#1a1a1a; margin:0;">0 Pesanan</h2>
+            </div>
+        </div>
+
         <h3>Manajemen Pengiriman Paket & Invoice Masuk</h3>
         <div style="overflow-x: auto;">
             <table>
@@ -100,38 +119,22 @@
                     <div class="form-group"><label>Deskripsi Parfum</label><textarea id="prod-desc" rows="2" required></textarea></div>
                     <div class="form-group"><label>Kata Kunci Karakter (Pencarian AI)</label><textarea id="prod-karakter" rows="2" required></textarea></div>
                 </div>
-                <div class="form-grid">
-                    <div class="form-group"><label>Top Note</label><input type="text" id="note-top" required></div>
-                    <div class="form-group"><label>Heart Note</label><input type="text" id="note-heart" required></div>
-                    <div class="form-group"><label>Base Note</label><input type="text" id="note-base" required></div>
-                    <div class="form-group"><label>Link Shopee</label><input type="url" id="prod-shopee" required></div>
-                </div>
                 <button type="submit" class="btn-action" style="background:#1a1a1a; color:white; padding:10px 20px;">SIMPAN DATA PRODUK</button>
-                <button type="button" id="btn-cancel" class="btn-action" style="background:#777; color:white; display:none;" onclick="resetProductForm()">BATAL</button>
             </form>
         </div>
         <h3>Katalog Produk Aktif</h3>
         <table>
-            <thead>
-                <tr><th>Gambar</th><th>Nama Produk</th><th>Kategori</th><th>Harga</th><th>Aroma Notes</th><th>Aksi</th></tr>
-            </thead>
+            <thead><tr><th>Gambar</th><th>Nama Produk</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr></thead>
             <tbody id="product-table-body"></tbody>
         </table>
     </div>
 
     <div id="tab-users" class="admin-section">
-        <h3>Daftar Akun Pengunjung yang Sudah Mendaftar</h3>
+        <h3>Daftar Akun Pengunjung Terdaftar (Sesi Lokal Browser Admin)</h3>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
-                    <tr>
-                        <th>ID User</th>
-                        <th>Nama Lengkap</th>
-                        <th>Alamat Email</th>
-                        <th>No. Handphone</th>
-                        <th>Tanggal Bergabung</th>
-                        <th>Aksi</th>
-                    </tr>
+                    <tr><th>ID User</th><th>Nama Lengkap</th><th>Alamat Email</th><th>No. Handphone</th><th>Aksi</th></tr>
                 </thead>
                 <tbody id="user-table-body"></tbody>
             </table>
@@ -140,11 +143,12 @@
 </div>
 
 <script>
-    // PROTEKSI KEAMANAN DASHBOARD ADMIN
+    let productsChartInstance = null;
+
     document.addEventListener('DOMContentLoaded', () => {
         const sessionToken = sessionStorage.getItem('adminSessionToken');
         if (!sessionToken || !sessionToken.startsWith('HYVA-AUTH-')) {
-            alert("Akses Ilegal! Anda wajib login melalui pintu gerbang resmi.");
+            alert("Akses Ilegal! Silakan login melalui pintu gerbang resmi.");
             window.location.href = "hyva-system-login.html";
         } else {
             initAdminDashboard();
@@ -164,23 +168,14 @@
         element.classList.add('active');
     }
 
-    // ================= INTEGRASI LOGIKA DATA PENGIRIMAN & TRANSAKSI =================
+    // ================= SINKRONISASI DATA PENGIRIMAN & GENERATOR GRAFIK =================
     function getGlobalOrdersData() {
         let orders = localStorage.getItem('hyva_global_orders');
         if (!orders) {
-            // Data cetakan dummy terintegrasi default pengiriman jika localstorage masih kosong
+            // Data awal dummy jika masih kosong untuk pemicu visual chart awal
             const sampleOrders = [
-                { 
-                    orderId: "HA-491023", 
-                    username: "Rizky Tri", 
-                    date: new Date().toLocaleDateString('id-ID'),
-                    receiverName: "Rizky Triyana",
-                    receiverPhone: "628571234567",
-                    shippingAddress: "Jl. Pemuda No. 12, RT 02/RW 05, Kec. Magersari, Kota Mojokerto, 61311",
-                    items: "Inspired by Romance Wish (1), Inspired by Luxury Oud (1)", 
-                    totalPrice: 96000, 
-                    status: "Sedang Dikemas" 
-                }
+                { orderId: "HA-491023", username: "Rizky Tri", date: "20/05/2026", receiverName: "Rizky Triyana", receiverPhone: "628571234567", shippingAddress: "Mojokerto", items: "Inspired by Romance Wish, Inspired by Luxury Oud", totalPrice: 96000, status: "Sedang Dikemas" },
+                { orderId: "HA-582910", username: "Amalia", date: "22/05/2026", receiverName: "Amalia Putri", receiverPhone: "62812999922", shippingAddress: "Surabaya", items: "Inspired by Romance Wish", totalPrice: 48000, status: "Dikirim" }
             ];
             localStorage.setItem('hyva_global_orders', JSON.stringify(sampleOrders));
             return sampleOrders;
@@ -193,12 +188,23 @@
         const tbody = document.getElementById('order-table-body');
         tbody.innerHTML = '';
 
-        if(orders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#999; padding:30px;">Belum ada invoice pesanan ataupun data pengiriman paket masuk.</td></tr>`;
-            return;
-        }
+        let totalRevenue = 0;
+        let productCounts = {};
 
         orders.forEach((order) => {
+            totalRevenue += (order.totalPrice || 0);
+
+            // Ekstraksi teks nama produk untuk menghitung grafik penjualan terlaris
+            if (order.items) {
+                let itemArray = order.items.split(',');
+                itemArray.forEach(itemName => {
+                    let cleanName = itemName.replace(/^^[\s\d\-x(]+|[\s\d\)]+$/g, '').trim(); 
+                    if(cleanName) {
+                        productCounts[cleanName] = (productCounts[cleanName] || 0) + 1;
+                    }
+                });
+            }
+
             let badgeClass = "status-packing";
             if (order.status === "Dikirim") badgeClass = "status-transit";
             if (order.status === "Selesai") badgeClass = "status-delivered";
@@ -207,81 +213,104 @@
             tr.innerHTML = `
                 <td><strong>#${order.orderId}</strong></td>
                 <td style="color:#666; font-size:12px;">${order.date || '-'}</td>
-                <td><span style="font-weight:600; color:#444;">${order.username}</span></td>
+                <td><span style="font-weight:600;">${order.username}</span></td>
                 <td>
                     <div class="form-grid-shipping">
                         <strong>Nama:</strong> ${order.receiverName || order.username}<br>
-                        <strong>WA:</strong> <a href="https://wa.me/${order.receiverPhone}" target="_blank" style="color:#27ae60; font-weight:bold; text-decoration:none;"><i class="fab fa-whatsapp"></i> ${order.receiverPhone || '-'}</a><br>
-                        <strong>Alamat:</strong> ${order.shippingAddress || 'Alamat tidak diisi'}
+                        <strong>WA:</strong> ${order.receiverPhone || '-'}<br>
+                        <strong>Alamat:</strong> ${order.shippingAddress || '-'}
                     </div>
                 </td>
                 <td style="font-weight:500;">${order.items}</td>
-                <td style="font-weight:bold; color:#a68b5c;">Rp ${(order.totalPrice || order.total || 0).toLocaleString()}</td>
+                <td style="font-weight:bold; color:#a68b5c;">Rp ${order.totalPrice.toLocaleString()}</td>
                 <td><span class="status-badge ${badgeClass}">${order.status}</span></td>
                 <td>
                     <select class="select-status" onchange="updateStatusPengirimanBarang('${order.orderId}', this.value)">
                         <option value="Sedang Dikemas" ${order.status === 'Sedang Dikemas' ? 'selected' : ''}>Sedang Dikemas</option>
-                        <option value="Dikirim" ${order.status === 'Dikirim' ? 'selected' : ''}>Dikirim (Dalam Perjalanan)</option>
-                        <option value="Selesai" ${order.status === 'Selesai' ? 'selected' : ''}>Selesai (Diterima)</option>
+                        <option value="Dikirim" ${order.status === 'Dikirim' ? 'selected' : ''}>Dikirim</option>
+                        <option value="Selesai" ${order.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
                     </select>
                 </td>
-                <td>
-                    <button class="btn-action btn-delete" onclick="deleteOrder('${order.orderId}')" title="Hapus Riwayat"><i class="fas fa-trash"></i></button>
-                </td>
+                <td><button class="btn-action btn-delete" onclick="deleteOrder('${order.orderId}')"><i class="fas fa-trash"></i></button></td>
             `;
             tbody.appendChild(tr);
+        });
+
+        // Tampilkan metrik data ringkasan keuangan
+        document.getElementById('total-revenue-label').innerText = "Rp " + totalRevenue.toLocaleString();
+        document.getElementById('total-orders-label').innerText = orders.length + " Pesanan";
+
+        // Gambar ulang grafik
+        renderProductsChart(productCounts);
+    }
+
+    function renderProductsChart(productCounts) {
+        const ctx = document.getElementById('productsChart').getContext('2d');
+        
+        const labels = Object.keys(productCounts);
+        const dataValues = Object.values(productCounts);
+
+        if (productsChartInstance) {
+            productsChartInstance.destroy(); // Hancurkan chart lama agar tidak tumpang tindih
+        }
+
+        productsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Jumlah Botol Terjual',
+                    data: dataValues,
+                    backgroundColor: 'rgba(166, 139, 92, 0.7)',
+                    borderColor: 'rgba(166, 139, 92, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
         });
     }
 
     function updateStatusPengirimanBarang(orderId, statusBaru) {
         let globalOrders = getGlobalOrdersData();
         let orderIndex = globalOrders.findIndex(o => String(o.orderId) === String(orderId));
-        
         if (orderIndex !== -1) {
             globalOrders[orderIndex].status = statusBaru;
             localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
-            loadOrders(); // Muat ulang tabel admin
-            alert(`Sukses: Status pesanan #${orderId} berhasil diubah menjadi "${statusBaru}" dan tersinkronisasi ke akun pelanggan.`);
+            loadOrders();
         }
     }
 
     function deleteOrder(orderId) {
-        if(confirm("Hapus data riwayat transaksi dan pengiriman ini secara permanen?")) {
+        if(confirm("Hapus permanen riwayat transaksi ini?")) {
             let globalOrders = getGlobalOrdersData().filter(o => String(o.orderId) !== String(orderId));
             localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
             loadOrders();
         }
     }
 
-    // ================= DATA PELANGGAN YANG DAFTAR =================
+    // ================= LOAD DAFTAR USER & KATALOG PRODUK =================
     function loadRegisteredUsers() {
         const users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
         const tbody = document.getElementById('user-table-body');
         tbody.innerHTML = '';
-
         if(users.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">Belum ada pelanggan baru yang mendaftar melalui form toko.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Gunakan akun Google milik pelanggan langsung di web toko untuk mengisi data tabel ini otomatis.</td></tr>`;
             return;
         }
-
         users.forEach(user => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><small style="color:#aaa;">${user.id}</small></td>
-                <td><strong>${user.name}</strong></td>
-                <td>${user.email}</td>
-                <td><a href="https://wa.me/${user.phone}" target="_blank" style="color:#155724; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> ${user.phone}</a></td>
-                <td>${user.joinedDate || 'Tidak Terdeteksi'}</td>
-                <td>
-                    <button class="btn-action btn-delete" onclick="deleteUser('${user.id}')"><i class="fas fa-user-minus"></i> Hapus</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+            tbody.innerHTML += `<tr><td><small>${user.id}</small></td><td><strong>${user.name}</strong></td><td>${user.email}</td><td>${user.phone || '-'}</td><td><button class="btn-action btn-delete" onclick="deleteUser('${user.id}')">Hapus</button></td></tr>`;
         });
     }
 
     function deleteUser(id) {
-        if(confirm("Apakah Kakak yakin ingin menghapus akun pelanggan ini dari database toko?")) {
+        if(confirm("Hapus pengguna ini?")) {
             let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
             users = users.filter(u => u.id !== id);
             localStorage.setItem('hyva_users_database', JSON.stringify(users));
@@ -289,120 +318,21 @@
         }
     }
 
-    // ================= MANAJEMEN PRODUK KATALOG =================
-    function getProductsData() {
-        return JSON.parse(localStorage.getItem('hyva_products_database')) || [];
-    }
-
     function loadAdminProducts() {
-        const productsList = getProductsData();
+        const productsList = JSON.parse(localStorage.getItem('hyva_products_database')) || [];
         const tbody = document.getElementById('product-table-body');
         tbody.innerHTML = '';
-
-        if(productsList.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">Katalog kosong. Silakan tambah produk baru di atas.</td></tr>`;
-            return;
-        }
-
-        productsList.forEach(product => {
-            const topNote = product.notes ? product.notes.top : '-';
-            const heartNote = product.notes ? product.notes.heart : '-';
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><img src="${product.img}" class="product-img-preview" onerror="this.src='https://placehold.co/100x100?text=Perfume'"></td>
-                <td style="font-weight: bold;">${product.name}</td>
-                <td><span style="text-transform: capitalize;">${product.category}</span></td>
-                <td>Rp ${Number(product.price).toLocaleString()}</td>
-                <td style="color:#666; font-size:11px;">Top: ${topNote} | Heart: ${heartNote}</td>
-                <td>
-                    <button class="btn-action btn-edit" onclick="editProduct('${product.id}')">Edit</button>
-                    <button class="btn-action btn-delete" onclick="deleteProduct('${product.id}')">Hapus</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+        productsList.forEach(p => {
+            tbody.innerHTML += `<tr><td><img src="${p.img}" class="product-img-preview" onerror="this.src='https://placehold.co/50x50'"></td><td><strong>${p.name}</strong></td><td>${p.category}</td><td>Rp ${p.price.toLocaleString()}</td><td><button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')">Hapus</button></td></tr>`;
         });
     }
 
-    function saveProduct(event) {
-        event.preventDefault();
-        let productsList = getProductsData();
-        
-        const id = document.getElementById('prod-id').value;
-        const name = document.getElementById('prod-name').value.trim();
-        const category = document.getElementById('prod-category').value;
-        const price = parseInt(document.getElementById('prod-price').value);
-        const img = document.getElementById('prod-img').value.trim();
-        const desc = document.getElementById('prod-desc').value.trim();
-        const karakter = document.getElementById('prod-karakter').value.trim();
-        const topNote = document.getElementById('note-top').value.trim();
-        const heartNote = document.getElementById('note-heart').value.trim();
-        const baseNote = document.getElementById('note-base').value.trim();
-        const shopeeLink = document.getElementById('prod-shopee').value.trim();
-
-        if (id) {
-            const index = productsList.findIndex(p => String(p.id) === String(id));
-            if (index !== -1) {
-                productsList[index] = { 
-                    ...productsList[index], 
-                    name, category, price, img, desc, karakter, 
-                    notes: { top: topNote, heart: heartNote, base: baseNote }, 
-                    shopeeLink 
-                };
-            }
-        } else {
-            const newId = "PROD-" + Date.now();
-            productsList.push({ 
-                id: newId, 
-                brand: "HYVA ARVM", 
-                category, name, price, img, desc, karakter,
-                notes: { top: topNote, heart: heartNote, base: baseNote }, 
-                rating: { top: 5, heart: 4, base: 4, longevity: 85 }, 
-                shopeeLink 
-            });
-        }
-
-        localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
-        resetProductForm();
-        loadAdminProducts();
-        alert("Database katalog produk Hyva Arvm berhasil diperbarui!");
-    }
-
-    function editProduct(id) {
-        const p = getProductsData().find(prod => String(prod.id) === String(id));
-        if (!p) return;
-
-        document.getElementById('prod-id').value = p.id;
-        document.getElementById('prod-name').value = p.name;
-        document.getElementById('prod-category').value = p.category;
-        document.getElementById('prod-price').value = p.price;
-        document.getElementById('prod-img').value = p.img;
-        document.getElementById('prod-desc').value = p.desc;
-        document.getElementById('prod-karakter').value = p.karakter;
-        
-        document.getElementById('note-top').value = p.notes ? p.notes.top : '';
-        document.getElementById('note-heart').value = p.notes ? p.notes.heart : '';
-        document.getElementById('note-base').value = p.notes ? p.notes.base : '';
-        document.getElementById('prod-shopee').value = p.shopeeLink || '';
-
-        document.getElementById('form-title').innerHTML = `<i class="fas fa-edit"></i> Edit Varian: ${p.name}`;
-        document.getElementById('btn-cancel').style.display = 'inline-block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
     function deleteProduct(id) {
-        if (confirm("Hapus permanen varian parfum ini dari katalog toko?")) {
-            let productsList = getProductsData().filter(p => String(p.id) !== String(id));
-            localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
+        if(confirm("Hapus produk ini?")) {
+            let list = (JSON.parse(localStorage.getItem('hyva_products_database')) || []).filter(p => String(p.id) !== String(id));
+            localStorage.setItem('hyva_products_database', JSON.stringify(list));
             loadAdminProducts();
         }
-    }
-
-    function resetProductForm() {
-        document.getElementById('product-form').reset();
-        document.getElementById('prod-id').value = '';
-        document.getElementById('form-title').innerHTML = `<i class="fas fa-plus-circle"></i> Tambah Produk Baru`;
-        document.getElementById('btn-cancel').style.display = 'none';
     }
 
     function logoutAdmin() {
