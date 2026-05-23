@@ -357,11 +357,15 @@ function confirmPayment() {
         `Detail Tujuan Pengiriman:\n${shipping.address}`
     );
     
+    // 1. Simpan data riwayat ke database lokal pembeli & admin
     simpanTransaksiKeRiwayat(shipping.name, shipping.phone, shipping.address, total, shipping.usernameDatabase);
+    
+    // 2. Buka tab WhatsApp tanpa delay pop-up kaku
     window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 
     if (typeof pemicuUlasanSetelahBeli === 'function') pemicuUlasanSetelahBeli();
 
+    // 3. Bersihkan sisa keranjang belanja secara senyap
     cart = [];
     localStorage.removeItem('hyva_cart');
     sessionStorage.removeItem('temp_shipping');
@@ -369,8 +373,14 @@ function confirmPayment() {
     if (typeof updateCartUI === "function") updateCartUI();
     closePayModal();
     
-    showHyvaToast("Pembayaran sukses dicatat! Status diatur menjadi 'Sedang Dikemas'. Cek riwayat pengiriman di dashboard Kakak ✨", "fas fa-check-circle");
+    // 4. FIX TOAST LUXURY: Pemicu animasi toast profesional buatan kita tanpa popup bawaan chrome!
+    if (typeof showHyvaToast === "function") {
+        showHyvaToast("Pembayaran sukses dicatat! Status otomatis diatur menjadi 'Sedang Dikemas'. Cek progres paket Kakak di menu pelacakan ✨", "fas fa-check-circle");
+    } else {
+        alert("Pembayaran sukses dicatat!");
+    }
     
+    // 5. Segarkan data halaman agar sinkronisasi visual berjalan sempurna
     setTimeout(() => {
         window.location.reload();
     }, 2000);
