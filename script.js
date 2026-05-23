@@ -1151,11 +1151,30 @@ function updateNavbarUser() {
 }
 
 function confirmLogout() {
+    // 1. Hapus data otentikasi login bawaan
     localStorage.removeItem('loggedInUser');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userPhoto');
-    localStorage.removeItem('hyva_cart'); 
-    window.location.reload();
+    localStorage.removeItem('userPhone');
+    localStorage.removeItem('userAddress');
+
+    // 2. Hapus data sesi alamat premium terstruktur agar tidak tersangkut sebagai Guest
+    localStorage.removeItem('hyva_logged_in_user');
+
+    // 3. Tampilkan pesan perpisahan manis sebelum reload halaman
+    if (typeof showHyvaToast === "function") {
+        showHyvaToast("Kakak berhasil keluar dari akun. Sampai jumpa lagi! 👋✨", "fas fa-sign-out-alt");
+    }
+
+    // 4. Paksa render ulang UI pelacakan agar langsung kosong seketika sebelum halaman dimuat ulang
+    if (typeof renderUserOrderStatus === 'function') {
+        renderUserOrderStatus();
+    }
+
+    // 5. Muat ulang halaman setelah jeda singkat agar memori browser kembali bersih total
+    setTimeout(() => {
+        window.location.reload();
+    }, 1200);
 }
 
 function handleProfileClick() {
