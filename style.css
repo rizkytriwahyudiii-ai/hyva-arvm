@@ -2347,49 +2347,77 @@ html {
 }
 
 /* ==========================================================================
-   HYVA PREMIUM TOAST NOTIFICATION POP-UP
+   HYVA PREMIUM TOAST NOTIFICATION POP-UP (VERSI MODERN & LUXURY)
    ========================================================================== */
 .hyva-toast-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 99999;
+    top: 30px;
+    right: 30px;
+    z-index: 999999;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
+    pointer-events: none; /* Mencegah bug klik tak sengaja pada area kosong */
 }
 
 .hyva-toast {
-    background: #0f172a; /* Warna gelap mewah */
+    pointer-events: auto; /* Mengaktifkan kembali interaksi di dalam toast */
+    background: rgba(15, 23, 42, 0.92); /* Background gelap transparan premium */
+    backdrop-filter: blur(12px); /* Efek Glassmorphism modern */
+    -webkit-backdrop-filter: blur(12px);
     color: #ffffff;
-    padding: 14px 22px;
-    border-radius: 8px;
+    padding: 16px 26px;
+    border-radius: 12px; /* Lebih melengkung modern */
     font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    border-left: 4px solid #a68b5c; /* Aksen Gold khas Hyva */
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    line-height: 1.5;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25), 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Border tipis estetik */
+    border-left: 5px solid #d4af37; /* Aksen Gold murni */
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 280px;
-    max-width: 400px;
-    transform: translateY(-20px);
+    gap: 16px;
+    min-width: 320px;
+    max-width: 450px;
+    transform: translateX(40px) scale(0.95); /* Efek masuk dari samping */
     opacity: 0;
-    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Warna gradasi teks khusus untuk highlight nama produk atau status */
+.hyva-toast strong {
+    color: #f3e5ab;
+    font-weight: 600;
 }
 
 .hyva-toast.show {
-    transform: translateY(0);
+    transform: translateX(0) scale(1);
     opacity: 1;
 }
 
 .hyva-toast.hide {
-    transform: scale(0.9);
+    transform: translateY(-20px) scale(0.9);
     opacity: 0;
+    transition: all 0.3s ease;
 }
 
-.hyva-toast i {
-    color: #a68b5c; /* Icon warna emas */
-    font-size: 16px;
+/* Styling Ikon Bulat Premium di dalam Pop-up */
+.hyva-toast-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(212, 175, 55, 0.15); /* Soft gold background circle */
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.hyva-toast-icon-wrapper i {
+    background: linear-gradient(135deg, #d4af37, #f3e5ab);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 14px;
 }
