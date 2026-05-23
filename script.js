@@ -126,7 +126,7 @@ function closeDetail() {
 }
 
 /* ==========================================================================
-   4. SISTEM KERANJANG (CART LOGIC) - VERSI WAJIB LOGIN & FORM ALAMAT
+   4. SISTEM KERANJANG (CART LOGIC) - VERSI WAJIB LOGIN & MODAL ALAMAT MODERN
    ========================================================================== */
 let cart = JSON.parse(localStorage.getItem('hyva_cart')) || [];
 
@@ -176,23 +176,23 @@ function updateCartUI() {
                 </div>
             `).join('');
 
-            let currentUsername = localStorage.getItem('loggedInUser') || '';
-            let formShippingHtml = `
+            // Membaca alamat yang tersimpan untuk ditampilkan sebagai info ringkas di dalam keranjang
+            let savedAddressInfo = localStorage.getItem('userAddress') || 'Belum diisi';
+            let addressStyle = savedAddressInfo === 'Belum diisi' ? 'color:#d9534f; font-weight:bold;' : 'color:#2e7d32; font-weight:600;';
+
+            let addressPreviewHtml = `
                 <div class="form-shipping-address" style="margin-top: 20px; border-top: 2px dashed #8b734b; padding-top: 15px;">
-                    <h4 style="font-size:13px; margin-bottom:10px; text-transform:uppercase; color:#262525;"><i class="fas fa-map-marker-alt"></i> Alamat Lengkap Pengiriman</h4>
-                    <div style="margin-bottom:8px;">
-                        <input type="text" id="ship-name" placeholder="Nama Penerima" style="width:100%; padding:8px; font-size:12px; border:1px solid #ccc; border-radius:4px;" value="${currentUsername}">
-                    </div>
-                    <div style="margin-bottom:8px;">
-                        <input type="text" id="ship-phone" placeholder="Nomor WhatsApp Aktif" style="width:100%; padding:8px; font-size:12px; border:1px solid #ccc; border-radius:4px;">
-                    </div>
-                    <div style="margin-bottom:8px;">
-                        <textarea id="ship-address" placeholder="Tulis jalan, nomor rumah, RT/RW, kecamatan, kabupaten, dan kode pos..." style="width:100%; padding:8px; font-size:12px; border:1px solid #ccc; border-radius:4px; height:60px; resize:none; font-family:'Montserrat',sans-serif;"></textarea>
+                    <h4 style="font-size:13px; margin-bottom:8px; text-transform:uppercase; color:#262525; display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fas fa-map-marker-alt" style="color:#d4af37;"></i> Alamat Tujuan Pengiriman</span>
+                        <a href="javascript:void(0)" onclick="openAddressModal()" style="color:#d4af37; text-transform:none; font-size:11px; text-decoration:underline;">Ubah Alamat</a>
+                    </h4>
+                    <div style="background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; font-size:12px; line-height:1.4; ${addressStyle}">
+                        ${savedAddressInfo}
                     </div>
                 </div>
             `;
             
-            container.innerHTML = itemsHtml + formShippingHtml;
+            container.innerHTML = itemsHtml + addressPreviewHtml;
         }
     }
 
@@ -224,54 +224,65 @@ function toggleCart() {
 }
 
 /* ==========================================================================
-   5. PEMBAYARAN & CHECKOUT WITH STATUS TRACKING (INTEGRATED WITH ADMIN)
+   5. PEMBAYARAN & CHECKOUT WITH STATUS TRACKING (INTEGRATED WITH ADRESS MODAL)
    ========================================================================== */
 function checkoutWA() {
-    if (cart.length === 0) return alert("Keranjang kosong!");
+    if (cart.length === 0) {
+        showHyvaToast("Gagal: Keranjang belanjaan Kakak masih kosong! 🛒", "fas fa-shopping-cart");
+        return;
+    }
     
-    const name = document.getElementById('ship-name')?.value.trim();
-    const phone = document.getElementById('ship-phone')?.value.trim();
-    const address = document.getElementById('ship-address')?.value.trim();
-    if (!name || !phone || !address) {
-        return alert("Gagal: Silakan isi data Nama, No. WA, dan Alamat lengkap pengiriman di dalam keranjang!");
+    const savedAddress = localStorage.getItem('userAddress');
+    const savedPhone = localStorage.getItem('userPhone') || '-';
+    const loggedInUser = localStorage.getItem('loggedInUser') || 'Pelanggan Hyva';
+
+    // VALIDASI PEMBLOKIRAN DATA KOSONG
+    if (!savedAddress || savedAddress.trim() === "" || savedAddress === "Belum diisi") {
+        showHyvaToast("Alamat pengiriman belum diatur. Yuk lengkapi terlebih dahulu! 📍", "fas fa-map-marked-alt");
+        toggleCart(); // Tutup keranjang agar modal alamat terlihat jelas
+        openAddressModal();
+        return; // BERHENTI MUTLAK
     }
 
     let msg = `Halo Hyva Arvm, saya mau pesan:%0A`;
     cart.forEach(i => msg += `- ${i.name}%0A`);
     let total = cart.reduce((s, i) => s + i.price, 0);
     msg += `%0ATotal: Rp ${total.toLocaleString()}%0A%0A`;
-    msg += `*Detail Pengiriman:*%0ANama: ${name}%0AAlamat: ${address}%0ANo HP: ${phone}`;
+    msg += `*Detail Pengiriman:*%0ANama Penerima: ${loggedInUser}%0AAlamat: ${savedAddress}%0ANo HP/WA: ${savedPhone}`;
     
-    simpanTransaksiKeRiwayat(name, phone, address, total);
-
+    simpanTransaksiKeRiwayat(loggedInUser, savedPhone, savedAddress, total);
     window.open(`https://wa.me/6282245556161?text=${msg}`, '_blank');
 }
 
 function checkoutShopee() {
     if (cart.length === 0) {
-        alert("Keranjangmu masih kosong, silakan pilih parfum favoritmu dulu!");
+        showHyvaToast("Keranjangmu masih kosong, silakan pilih parfum favoritmu dulu! ✨", "fas fa-ghost");
         return;
     }
     if (cart.length === 1 && cart[0].shopeeLink) {
         window.open(cart[0].shopeeLink, "_blank");
     } else {
         window.open("https://shopee.co.id/hyva.arvm", "_blank");
-        alert("Kamu memilih beberapa parfum. Silakan cari produknya di toko Shopee kami ya!");
+        showHyvaToast("Kakak memilih beberapa produk. Silakan cari variannya di etalase Shopee kami ya! 🛍️", "fas fa-info-circle");
     }
 }
 
 function checkoutOtomatis() {
     if (cart.length === 0) {
-        alert("Keranjang belanjaanmu masih kosong!");
+        showHyvaToast("Gagal: Keranjang belanjaan Kakak masih kosong! 🛒", "fas fa-shopping-cart");
         return;
     }
     
-    const name = document.getElementById('ship-name')?.value.trim();
-    const phone = document.getElementById('ship-phone')?.value.trim();
-    const address = document.getElementById('ship-address')?.value.trim();
-    if (!name || !phone || !address) {
-        alert("Gagal: Mohon lengkapi formulir Alamat Pengiriman terlebih dahulu!");
-        return;
+    const savedAddress = localStorage.getItem('userAddress');
+    const savedPhone = localStorage.getItem('userPhone') || '-';
+    const loggedInUser = localStorage.getItem('loggedInUser') || 'Pelanggan Hyva';
+
+    // VALIDASI PEMBLOKIRAN DATA KOSONG
+    if (!savedAddress || savedAddress.trim() === "" || savedAddress === "Belum diisi") {
+        showHyvaToast("Alamat pengiriman belum diatur. Yuk lengkapi terlebih dahulu! 📍", "fas fa-map-marked-alt");
+        toggleCart(); // Tutup keranjang agar modal alamat terlihat jelas
+        openAddressModal();
+        return; // BERHENTI MUTLAK
     }
     
     const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -280,7 +291,7 @@ function checkoutOtomatis() {
         totalLabel.innerText = "Rp " + total.toLocaleString();
     }
     
-    sessionStorage.setItem('temp_shipping', JSON.stringify({ name, phone, address }));
+    sessionStorage.setItem('temp_shipping', JSON.stringify({ name: loggedInUser, phone: savedPhone, address: savedAddress }));
     
     toggleCart(); 
     openPayModal();
@@ -311,10 +322,9 @@ function confirmPayment() {
     );
     
     simpanTransaksiKeRiwayat(shipping.name, shipping.phone, shipping.address, total);
-
     window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 
-    pemicuUlasanSetelahBeli();
+    if (typeof pemicuUlasanSetelahBeli === 'function') pemicuUlasanSetelahBeli();
 
     cart = [];
     localStorage.removeItem('hyva_cart');
@@ -322,8 +332,11 @@ function confirmPayment() {
     updateCartUI();
     closePayModal();
     
-    alert("Pembayaran berhasil dicatat! Status paket Anda sekarang diatur menjadi 'Sedang Dikemas'. Silakan cek status pengiriman barang di dashboard akun Anda.");
-    window.location.href = 'index.html'; 
+    showHyvaToast("Pembayaran sukses dicatat! Status diatur menjadi 'Sedang Dikemas'. Cek riwayat pengiriman di dashboard Kakak ✨", "fas fa-check-circle");
+    
+    setTimeout(() => {
+        window.location.reload();
+    }, 2000);
 }
 
 function hubungiAdmin() {
@@ -332,18 +345,15 @@ function hubungiAdmin() {
     window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 }
 
-// FORMAT SINKRONISASI COBA BACA JUMLAH PRODUK KE GRAFIK (Nama Produk (1x))
 function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga) {
     const loggedInUser = localStorage.getItem('loggedInUser') || 'Guest';
     const orderId = "HA-" + Math.floor(100000 + Math.random() * 900000); 
     
-    // Kelompokkan produk yang sama untuk menghitung kuantitas (Qty)
     let kumpulkanItem = {};
     cart.forEach(item => {
         kumpulkanItem[item.name] = (kumpulkanItem[item.name] || 0) + 1;
     });
     
-    // Konstruksi string: "Inspired by Romance Wish (2x), Inspired by Aqua Kiss (1x)"
     let itemsFormattedString = Object.keys(kumpulkanItem).map(name => `${name} (${kumpulkanItem[name]}x)`).join(', ');
 
     const orderData = {
@@ -438,6 +448,63 @@ function renderUserOrderStatus() {
             </div>
         </div>
     `;
+}
+
+/* ==========================================================================
+   FUNGSI KONTROL UTAMA ADRESS MODAL LUXURY (TAMBAHKAN INI JUGA)
+   ========================================================================== */
+function openAddressModal() {
+    const modal = document.getElementById('hyva-address-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Memuat otomatis data lama dari LocalStorage jika user sudah pernah menginput
+        const currentAddr = localStorage.getItem('userAddress');
+        const currentPhone = localStorage.getItem('userPhone');
+
+        if (currentAddr && currentAddr !== "Belum diisi") {
+            // Pecah kembali text alamat gabungan agar terdistribusi manis ke baris input masing-masing
+            const parts = currentAddr.split(', Kota/Kab. ');
+            if (parts[0]) document.getElementById('modal-addr-text').value = parts[0];
+            if (parts[1]) {
+                const subParts = parts[1].split(', Provinsi ');
+                if (subParts[0]) document.getElementById('modal-addr-city').value = subParts[0];
+                if (subParts[1]) document.getElementById('modal-addr-prov').value = subParts[1];
+            }
+        }
+        if (currentPhone) {
+            document.getElementById('modal-addr-phone').value = currentPhone;
+        }
+    }
+}
+
+function closeAddressModal() {
+    const modal = document.getElementById('hyva-address-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function saveHyvaAddress(event) {
+    event.preventDefault();
+    
+    const jalan = document.getElementById('modal-addr-text').value.trim();
+    const kota = document.getElementById('modal-addr-city').value.trim();
+    const provinsi = document.getElementById('modal-addr-prov').value.trim();
+    const wa = document.getElementById('modal-addr-phone').value.trim();
+
+    if (jalan === "" || kota === "" || provinsi === "" || wa === "") {
+        showHyvaToast("Gagal: Lengkapi seluruh kolom alamat & No WA Kakak! ⚠️", "fas fa-exclamation-circle");
+        return;
+    }
+
+    const alamatGabungan = `${jalan}, Kota/Kab. ${kota}, Provinsi ${provinsi}`;
+    
+    // Simpan ke database lokal browser
+    localStorage.setItem('userAddress', alamatGabungan);
+    localStorage.setItem('userPhone', wa);
+    
+    showHyvaToast("Alamat pengiriman berhasil diperbarui! ✨ 📍", "fas fa-check-circle");
+    closeAddressModal();
+    updateCartUI(); // Segarkan tampilan ringkasan alamat di keranjang
 }
 
 /* ==========================================================================
