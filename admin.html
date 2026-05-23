@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Hyva Arvm</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f4f7f6; padding: 20px; font-family: 'Montserrat', sans-serif; }
+        .admin-container { max-width: 1250px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #a68b5c; padding-bottom: 15px; margin-bottom: 30px; }
+        
+        .admin-nav { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
+        .nav-tab { padding: 12px 20px; border: none; background: none; font-size: 13px; font-weight: bold; cursor: pointer; color: #666; transition: 0.3s; }
+        .nav-tab.active { color: #a68b5c; border-bottom: 3px solid #a68b5c; }
+        
+        .admin-section { display: none; }
+        .admin-section.active { display: block; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th { background-color: #1a1a1a; color: white; padding: 12px; text-align: left; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
+        tr:hover { background-color: #fafafa; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; }
+        .status-packing { background: #fff8e7; color: #d4a313; border: 1px solid #ffe8b3; }
+        .status-transit { background: #e6f7ff; color: #1890ff; border: 1px solid #bae7ff; }
+        .status-delivered { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+
+        .select-status { padding: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 12px; background: white; cursor: pointer; }
+        .btn-action { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.3s; }
+        .btn-edit { background: #a68b5c; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+        
+        .form-container { background: #f9f9f9; padding: 20px; border-radius: 6px; margin-bottom: 30px; border: 1px solid #eee; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-grid-shipping { font-size: 11px; color: #555; background: #fdfaf4; padding: 8px; border-radius: 4px; border-left: 3px solid #a68b5c; margin-top: 5px; line-height: 1.4; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #444; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .product-img-preview { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; }
+        .logout-link { color: #e74c3c; cursor: pointer; text-decoration: none; font-weight: bold; margin-left: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h2><i class="fas fa-user-shield"></i> Hyva Arvm Master Dashboard</h2>
+        <div>
+            <a href="index.html" style="text-decoration: none; color: #444; font-weight: bold;"><i class="fas fa-store"></i> Lihat Toko</a>
+            <span class="logout-link" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> Keluar</span>
+        </div>
+    </div>
+
+    <div class="admin-nav">
+        <button class="nav-tab active" onclick="switchTab('tab-orders', this)"><i class="fas fa-shipping-fast"></i> Kelola & Atur Pengiriman</button>
+        <button class="nav-tab" onclick="switchTab('tab-products', this)"><i class="fas fa-boxes"></i> Manajemen Katalog Produk</button>
+        <button class="nav-tab" onclick="switchTab('tab-users', this)"><i class="fas fa-users"></i> Daftar Pelanggan Terdaftar</button>
+    </div>
+
+    <div id="tab-orders" class="admin-section active">
+        <h3>Manajemen Pengiriman Paket & Invoice Masuk</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Pesanan</th>
+                        <th>Tanggal</th>
+                        <th>Akun Pembeli</th>
+                        <th>Detail Penerima & Alamat Pengiriman</th>
+                        <th>Produk Dipesan</th>
+                        <th>Total Tagihan</th>
+                        <th>Status Saat Ini</th>
+                        <th>Ubah Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="order-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tab-products" class="admin-section">
+        <div class="form-container">
+            <h3 id="form-title" style="margin-bottom: 15px; color:#a68b5c;"><i class="fas fa-plus-circle"></i> Tambah Produk Baru</h3>
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <input type="hidden" id="prod-id">
+                <div class="form-grid">
+                    <div class="form-group"><label>Nama Varian Parfum</label><input type="text" id="prod-name" required></div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="prod-category"><option value="wanita">Wanita</option><option value="pria">Pria</option><option value="unisex">Unisex</option></select>
+                    </div>
+                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="prod-price" required></div>
+                    <div class="form-group"><label>Nama File Gambar</label><input type="text" id="prod-img" required></div>
+                </div>
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group"><label>Deskripsi Parfum</label><textarea id="prod-desc" rows="2" required></textarea></div>
+                    <div class="form-group"><label>Kata Kunci Karakter (Pencarian AI)</label><textarea id="prod-karakter" rows="2" required></textarea></div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Top Note</label><input type="text" id="note-top" required></div>
+                    <div class="form-group"><label>Heart Note</label><input type="text" id="note-heart" required></div>
+                    <div class="form-group"><label>Base Note</label><input type="text" id="note-base" required></div>
+                    <div class="form-group"><label>Link Shopee</label><input type="url" id="prod-shopee" required></div>
+                </div>
+                <button type="submit" class="btn-action" style="background:#1a1a1a; color:white; padding:10px 20px;">SIMPAN DATA PRODUK</button>
+                <button type="button" id="btn-cancel" class="btn-action" style="background:#777; color:white; display:none;" onclick="resetProductForm()">BATAL</button>
+            </form>
+        </div>
+        <h3>Katalog Produk Aktif</h3>
+        <table>
+            <thead>
+                <tr><th>Gambar</th><th>Nama Produk</th><th>Kategori</th><th>Harga</th><th>Aroma Notes</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="product-table-body"></tbody>
+        </table>
+    </div>
+
+    <div id="tab-users" class="admin-section">
+        <h3>Daftar Akun Pengunjung yang Sudah Mendaftar</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID User</th>
+                        <th>Nama Lengkap</th>
+                        <th>Alamat Email</th>
+                        <th>No. Handphone</th>
+                        <th>Tanggal Bergabung</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // PROTEKSI KEAMANAN DASHBOARD ADMIN
+    document.addEventListener('DOMContentLoaded', () => {
+        const sessionToken = sessionStorage.getItem('adminSessionToken');
+        if (!sessionToken || !sessionToken.startsWith('HYVA-AUTH-')) {
+            alert("Akses Ilegal! Anda wajib login melalui pintu gerbang resmi.");
+            window.location.href = "hyva-system-login.html";
+        } else {
+            initAdminDashboard();
+        }
+    });
+
+    function initAdminDashboard() {
+        loadOrders();
+        loadAdminProducts();
+        loadRegisteredUsers();
+    }
+
+    function switchTab(sectionId, element) {
+        document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // ================= INTEGRASI LOGIKA DATA PENGIRIMAN & TRANSAKSI =================
+    function getGlobalOrdersData() {
+        let orders = localStorage.getItem('hyva_global_orders');
+        if (!orders) {
+            // Data cetakan dummy terintegrasi default pengiriman jika localstorage masih kosong
+            const sampleOrders = [
+                { 
+                    orderId: "HA-491023", 
+                    username: "Rizky Tri", 
+                    date: new Date().toLocaleDateString('id-ID'),
+                    receiverName: "Rizky Triyana",
+                    receiverPhone: "628571234567",
+                    shippingAddress: "Jl. Pemuda No. 12, RT 02/RW 05, Kec. Magersari, Kota Mojokerto, 61311",
+                    items: "Inspired by Romance Wish (1), Inspired by Luxury Oud (1)", 
+                    totalPrice: 96000, 
+                    status: "Sedang Dikemas" 
+                }
+            ];
+            localStorage.setItem('hyva_global_orders', JSON.stringify(sampleOrders));
+            return sampleOrders;
+        }
+        return JSON.parse(orders);
+    }
+
+    function loadOrders() {
+        const orders = getGlobalOrdersData();
+        const tbody = document.getElementById('order-table-body');
+        tbody.innerHTML = '';
+
+        if(orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#999; padding:30px;">Belum ada invoice pesanan ataupun data pengiriman paket masuk.</td></tr>`;
+            return;
+        }
+
+        orders.forEach((order) => {
+            let badgeClass = "status-packing";
+            if (order.status === "Dikirim") badgeClass = "status-transit";
+            if (order.status === "Selesai") badgeClass = "status-delivered";
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${order.orderId}</strong></td>
+                <td style="color:#666; font-size:12px;">${order.date || '-'}</td>
+                <td><span style="font-weight:600; color:#444;">${order.username}</span></td>
+                <td>
+                    <div class="form-grid-shipping">
+                        <strong>Nama:</strong> ${order.receiverName || order.username}<br>
+                        <strong>WA:</strong> <a href="https://wa.me/${order.receiverPhone}" target="_blank" style="color:#27ae60; font-weight:bold; text-decoration:none;"><i class="fab fa-whatsapp"></i> ${order.receiverPhone || '-'}</a><br>
+                        <strong>Alamat:</strong> ${order.shippingAddress || 'Alamat tidak diisi'}
+                    </div>
+                </td>
+                <td style="font-weight:500;">${order.items}</td>
+                <td style="font-weight:bold; color:#a68b5c;">Rp ${(order.totalPrice || order.total || 0).toLocaleString()}</td>
+                <td><span class="status-badge ${badgeClass}">${order.status}</span></td>
+                <td>
+                    <select class="select-status" onchange="updateStatusPengirimanBarang('${order.orderId}', this.value)">
+                        <option value="Sedang Dikemas" ${order.status === 'Sedang Dikemas' ? 'selected' : ''}>Sedang Dikemas</option>
+                        <option value="Dikirim" ${order.status === 'Dikirim' ? 'selected' : ''}>Dikirim (Dalam Perjalanan)</option>
+                        <option value="Selesai" ${order.status === 'Selesai' ? 'selected' : ''}>Selesai (Diterima)</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn-action btn-delete" onclick="deleteOrder('${order.orderId}')" title="Hapus Riwayat"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateStatusPengirimanBarang(orderId, statusBaru) {
+        let globalOrders = getGlobalOrdersData();
+        let orderIndex = globalOrders.findIndex(o => String(o.orderId) === String(orderId));
+        
+        if (orderIndex !== -1) {
+            globalOrders[orderIndex].status = statusBaru;
+            localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
+            loadOrders(); // Muat ulang tabel admin
+            alert(`Sukses: Status pesanan #${orderId} berhasil diubah menjadi "${statusBaru}" dan tersinkronisasi ke akun pelanggan.`);
+        }
+    }
+
+    function deleteOrder(orderId) {
+        if(confirm("Hapus data riwayat transaksi dan pengiriman ini secara permanen?")) {
+            let globalOrders = getGlobalOrdersData().filter(o => String(o.orderId) !== String(orderId));
+            localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
+            loadOrders();
+        }
+    }
+
+    // ================= DATA PELANGGAN YANG DAFTAR =================
+    function loadRegisteredUsers() {
+        const users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+        const tbody = document.getElementById('user-table-body');
+        tbody.innerHTML = '';
+
+        if(users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">Belum ada pelanggan baru yang mendaftar melalui form toko.</td></tr>`;
+            return;
+        }
+
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><small style="color:#aaa;">${user.id}</small></td>
+                <td><strong>${user.name}</strong></td>
+                <td>${user.email}</td>
+                <td><a href="https://wa.me/${user.phone}" target="_blank" style="color:#155724; text-decoration:none; font-weight:bold;"><i class="fab fa-whatsapp"></i> ${user.phone}</a></td>
+                <td>${user.joinedDate || 'Tidak Terdeteksi'}</td>
+                <td>
+                    <button class="btn-action btn-delete" onclick="deleteUser('${user.id}')"><i class="fas fa-user-minus"></i> Hapus</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function deleteUser(id) {
+        if(confirm("Apakah Kakak yakin ingin menghapus akun pelanggan ini dari database toko?")) {
+            let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+            users = users.filter(u => u.id !== id);
+            localStorage.setItem('hyva_users_database', JSON.stringify(users));
+            loadRegisteredUsers();
+        }
+    }
+
+    // ================= MANAJEMEN PRODUK KATALOG =================
+    function getProductsData() {
+        return JSON.parse(localStorage.getItem('hyva_products_database')) || [];
+    }
+
+    function loadAdminProducts() {
+        const productsList = getProductsData();
+        const tbody = document.getElementById('product-table-body');
+        tbody.innerHTML = '';
+
+        if(productsList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">Katalog kosong. Silakan tambah produk baru di atas.</td></tr>`;
+            return;
+        }
+
+        productsList.forEach(product => {
+            const topNote = product.notes ? product.notes.top : '-';
+            const heartNote = product.notes ? product.notes.heart : '-';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><img src="${product.img}" class="product-img-preview" onerror="this.src='https://placehold.co/100x100?text=Perfume'"></td>
+                <td style="font-weight: bold;">${product.name}</td>
+                <td><span style="text-transform: capitalize;">${product.category}</span></td>
+                <td>Rp ${Number(product.price).toLocaleString()}</td>
+                <td style="color:#666; font-size:11px;">Top: ${topNote} | Heart: ${heartNote}</td>
+                <td>
+                    <button class="btn-action btn-edit" onclick="editProduct('${product.id}')">Edit</button>
+                    <button class="btn-action btn-delete" onclick="deleteProduct('${product.id}')">Hapus</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function saveProduct(event) {
+        event.preventDefault();
+        let productsList = getProductsData();
+        
+        const id = document.getElementById('prod-id').value;
+        const name = document.getElementById('prod-name').value.trim();
+        const category = document.getElementById('prod-category').value;
+        const price = parseInt(document.getElementById('prod-price').value);
+        const img = document.getElementById('prod-img').value.trim();
+        const desc = document.getElementById('prod-desc').value.trim();
+        const karakter = document.getElementById('prod-karakter').value.trim();
+        const topNote = document.getElementById('note-top').value.trim();
+        const heartNote = document.getElementById('note-heart').value.trim();
+        const baseNote = document.getElementById('note-base').value.trim();
+        const shopeeLink = document.getElementById('prod-shopee').value.trim();
+
+        if (id) {
+            const index = productsList.findIndex(p => String(p.id) === String(id));
+            if (index !== -1) {
+                productsList[index] = { 
+                    ...productsList[index], 
+                    name, category, price, img, desc, karakter, 
+                    notes: { top: topNote, heart: heartNote, base: baseNote }, 
+                    shopeeLink 
+                };
+            }
+        } else {
+            const newId = "PROD-" + Date.now();
+            productsList.push({ 
+                id: newId, 
+                brand: "HYVA ARVM", 
+                category, name, price, img, desc, karakter,
+                notes: { top: topNote, heart: heartNote, base: baseNote }, 
+                rating: { top: 5, heart: 4, base: 4, longevity: 85 }, 
+                shopeeLink 
+            });
+        }
+
+        localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
+        resetProductForm();
+        loadAdminProducts();
+        alert("Database katalog produk Hyva Arvm berhasil diperbarui!");
+    }
+
+    function editProduct(id) {
+        const p = getProductsData().find(prod => String(prod.id) === String(id));
+        if (!p) return;
+
+        document.getElementById('prod-id').value = p.id;
+        document.getElementById('prod-name').value = p.name;
+        document.getElementById('prod-category').value = p.category;
+        document.getElementById('prod-price').value = p.price;
+        document.getElementById('prod-img').value = p.img;
+        document.getElementById('prod-desc').value = p.desc;
+        document.getElementById('prod-karakter').value = p.karakter;
+        
+        document.getElementById('note-top').value = p.notes ? p.notes.top : '';
+        document.getElementById('note-heart').value = p.notes ? p.notes.heart : '';
+        document.getElementById('note-base').value = p.notes ? p.notes.base : '';
+        document.getElementById('prod-shopee').value = p.shopeeLink || '';
+
+        document.getElementById('form-title').innerHTML = `<i class="fas fa-edit"></i> Edit Varian: ${p.name}`;
+        document.getElementById('btn-cancel').style.display = 'inline-block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteProduct(id) {
+        if (confirm("Hapus permanen varian parfum ini dari katalog toko?")) {
+            let productsList = getProductsData().filter(p => String(p.id) !== String(id));
+            localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
+            loadAdminProducts();
+        }
+    }
+
+    function resetProductForm() {
+        document.getElementById('product-form').reset();
+        document.getElementById('prod-id').value = '';
+        document.getElementById('form-title').innerHTML = `<i class="fas fa-plus-circle"></i> Tambah Produk Baru`;
+        document.getElementById('btn-cancel').style.display = 'none';
+    }
+
+    function logoutAdmin() {
+        sessionStorage.removeItem('adminSessionToken');
+        window.location.href = "index.html";
+    }
+</script>
+</body>
+</html>
