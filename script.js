@@ -475,7 +475,7 @@ function renderUserOrderStatus() {
 }
 
 /* ==========================================================================
-   FUNGSI ALAMAT PREMIUM STYLE SHOPEE - PECAH KOLOM WILAYAH & AUTO GUEST FIX
+   FUNGSI ALAMAT PREMIUM STYLE SHOPEE - EDISI REVISI TOTAL (PASTI SINKRON UI)
    ========================================================================== */
 
 let hyvaMap = null;
@@ -485,16 +485,17 @@ let hyvaMarker = null;
 function openAddressModal() {
     let addressModal = document.getElementById('address-modal');
     
-    // Ambil sesi user aktif, jika null buat objek kosong agar pembeli non-login/guest tidak diblokir
+    // Ambil sesi user aktif, atau gunakan data local lama sebagai cadangan sinkronisasi
     const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
+    const oldAddress = localStorage.getItem('userAddress') || "";
     
-    let nama = currentUser.name || "";
-    let telepon = currentUser.phone || "";
+    let nama = currentUser.name || localStorage.getItem('loggedInUser') || "";
+    let telepon = currentUser.phone || localStorage.getItem('userPhone') || "";
     let provinsi = "";
     let kota = "";
     let kecamatan = "";
     let kodePos = "";
-    let detailAlamat = currentUser.address || "";
+    let detailAlamat = oldAddress && !oldAddress.includes("Kec.") ? oldAddress : (currentUser.address || "");
     let koordinatText = "";
 
     // Muat data jika sebelumnya sudah pernah tersimpan terstruktur
@@ -509,9 +510,6 @@ function openAddressModal() {
         if (currentUser.structuredAddress.lat && currentUser.structuredAddress.lng) {
             koordinatText = `${currentUser.structuredAddress.lat}, ${currentUser.structuredAddress.lng}`;
         }
-    } else if (detailAlamat && detailAlamat.includes("PROV:")) {
-        // Antisipasi pembersihan jika ada sisa string format lama
-        detailAlamat = detailAlamat.split(', PROV:')[0];
     }
 
     if (!addressModal) {
@@ -523,7 +521,6 @@ function openAddressModal() {
         document.body.appendChild(addressModal);
     }
 
-    // Render Form Terpisah Sesuai Permintaan (Provinsi, Kota, Kecamatan, Kode Pos)
     addressModal.innerHTML = `
         <div class="logout-box" style="max-width: 580px; width: 95%; padding: 25px; border-radius: 12px; text-align: left; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;">
             <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 5px; color: #1a1a1a; display: flex; align-items: center; gap: 10px;">
@@ -654,7 +651,7 @@ function aktifkanPetaInteraktif() {
     }
 }
 
-// 3. Otomatis Deteksi Pecahan Wilayah (Reverse Geocoding Luar Negeri/Lokal)
+// 3. Otomatis Deteksi Pecahan Wilayah (Reverse Geocoding)
 function updateKoordinatForm(lat, lng) {
     const fixedLat = lat.toFixed(6);
     const fixedLng = lng.toFixed(6);
@@ -670,7 +667,6 @@ function updateKoordinatForm(lat, lng) {
                 const elKec = document.getElementById('addr-kecamatan');
                 const elPos = document.getElementById('addr-kodepos');
 
-                // Isi otomatis pecahan formulir berdasarkan deteksi koordinat GPS peta
                 if (elProv) elProv.value = data.address.state || "";
                 if (elKota) elKota.value = data.address.city || data.address.regency || data.address.county || "";
                 if (elKec) elKec.value = data.address.subdistrict || data.address.village || data.address.suburb || "";
@@ -679,16 +675,15 @@ function updateKoordinatForm(lat, lng) {
         }).catch(err => console.log("Gagal reverse geocoding"));
 }
 
-// 4. Menutup Modal Alamat & Bersihkan Instance Peta
+// 4. Menutup Modal Alamat
 function closeAddressModal() {
     const addressModal = document.getElementById('address-modal');
     if (addressModal) addressModal.style.display = 'none';
     hyvaMap = null; 
 }
 
-// 5. Fungsi Penyimpanan Canggih (Mendukung Pembeli Guest / Non-Login)
+// 5. EKSEKUSI PENYIMPANAN - SINKRONISASI GANDA KE STRUKTUR BARU & VARIABEL LAMA (MENGHINDARI BUG TAMPILAN)
 function saveUserAddress() {
-    // Pengumpul elemen DOM aman
     const elNama = document.getElementById('addr-nama');
     const elTelepon = document.getElementById('addr-telepon');
     const elProvinsi = document.getElementById('addr-provinsi');
@@ -709,7 +704,6 @@ function saveUserAddress() {
     const detailAlamat = elDetail.value.trim();
     const koordinatText = elKoor ? elKoor.value.trim() : "";
 
-    // Validasi Kelengkapan Isi Form
     if (!nama || !telepon || !provinsi || !kota || !kecamatan || !kodePos || !detailAlamat) {
         if (typeof showHyvaToast === "function") {
             showHyvaToast("Mohon lengkapi seluruh kolom alamat Kak! ⚠️", "fas fa-exclamation-triangle");
@@ -727,19 +721,22 @@ function saveUserAddress() {
         mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
     }
 
-    // Pembuatan string gabungan untuk manifest kurir nota WhatsApp admin
+    // Bangun struktur alamat teks gabungan premium
     let alamatGabunganLengkap = `${nama} (${telepon}), ${detailAlamat}, Kec. ${kecamatan}, ${kota}, Prov. ${provinsi}, ${kodePos}`;
     if (mapsLink) {
-        alamatGabunganLengkap += `\n📍 Link Koordinat Peta: ${mapsLink}`;
+        alamatGabunganLengkap += `\n📍 Link Peta: ${mapsLink}`;
     }
 
-    // SOLUSI GUEST: Jika user belum login, kita buatkan struktur objek guest sementara agar tidak crash
+    // --- STRATEGI SINKRONISASI KUNCI LAMA GUNA MENEMBUS BARRIER RENDER CART ---
+    localStorage.setItem('userAddress', alamatGabunganLengkap);
+    localStorage.setItem('userPhone', telepon);
+    localStorage.setItem('loggedInUser', nama);
+
+    // Tetap kelola ke struktur hyva_logged_in_user untuk backup data account
     let currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
     if (!currentUser) {
         currentUser = { name: nama, phone: telepon, email: "guest@hyvaarvm.com", isGuest: true };
     }
-
-    // Masukkan data terstruktur ke sesi halaman aktif
     currentUser.address = alamatGabunganLengkap;
     currentUser.structuredAddress = {
         nama: nama,
@@ -755,7 +752,6 @@ function saveUserAddress() {
     };
     localStorage.setItem('hyva_logged_in_user', JSON.stringify(currentUser));
 
-    // Sinkronkan ke database utama akun hanya jika dia user terdaftar
     if (!currentUser.isGuest) {
         let allUsers = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
         let userIndex = allUsers.findIndex(u => u.email === currentUser.email || u.phone === currentUser.phone);
@@ -766,18 +762,18 @@ function saveUserAddress() {
         }
     }
 
-    // Tutup popup dengan mulus
     closeAddressModal();
 
     if (typeof showHyvaToast === "function") {
         showHyvaToast("Alamat pengiriman berhasil diperbarui! 📍✨", "fas fa-check-circle");
     }
 
-    // Sinkronisasi pembaruan elemen pelacakan pesanan
-    if (typeof renderOrderTracking === "function") {
-        renderOrderTracking();
-    } else {
-        setTimeout(() => { location.reload(); }, 800);
+    // Paksa render ulang UI halaman keranjang & pelacakan pesanan secara langsung tanpa reload kaku
+    if (typeof updateCartUI === "function") {
+        updateCartUI(); 
+    }
+    if (typeof renderUserOrderStatus === "function") {
+        renderUserOrderStatus();
     }
 }
 
