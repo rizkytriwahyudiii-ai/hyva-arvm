@@ -137,7 +137,7 @@ function saveCartToStorage() {
 function addToCart(id) {
     const loggedInUser = localStorage.getItem('loggedInUser');
     if (!loggedInUser) {
-        alert("Pemberitahuan: Anda harus masuk/login terlebih dahulu untuk menambahkan produk ke keranjang belanja!");
+        showHyvaToast("Pemberitahuan: Anda harus masuk/login terlebih dahulu untuk menambahkan produk ke keranjang belanja!", "fas fa-user-lock");
         if (typeof openAuthModal === 'function') {
             openAuthModal('login');
         }
@@ -149,7 +149,7 @@ function addToCart(id) {
         cart.push(product);
         saveCartToStorage();
         updateCartUI();
-        alert(`Berhasil menambahkan "${product.name}" ke keranjang.`);
+        showHyvaToast(`Berhasil menambahkan "${product.name}" ke keranjang.`, "fas fa-shopping-bag");
     }
 }
 
@@ -677,7 +677,7 @@ function handleCredentialResponse(response) {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userPhoto', payload.picture);
 
-        alert("Halo " + payload.name + "! Kamu berhasil login via Google.");
+        showHyvaToast(`Halo ${payload.name}! Kamu berhasil login via Google.`, "fas fa-user-check");
         
         updateNavbarUser(); 
         renderUserOrderStatus();
@@ -698,7 +698,7 @@ function handleUserAuth(event, type) {
         userName = nameInput && nameInput.value.trim() !== "" ? nameInput.value.trim() : "Pelanggan Hyva";
         if(emailInput && emailInput.value.trim() !== "") userEmail = emailInput.value.trim();
         
-        alert("Pendaftaran Berhasil! Halo " + userName);
+        showHyvaToast(`Pendaftaran Berhasil! Halo ${userName}`, "fas fa-user-plus");
     } else {
         const loginInput = document.getElementById('login-identity');
         if (loginInput && loginInput.value.trim() !== "") {
@@ -708,7 +708,7 @@ function handleUserAuth(event, type) {
         } else {
             userName = "Pelanggan Hyva";
         }
-        alert("Login Berhasil!");
+        showHyvaToast("Login Berhasil!", "fas fa-sign-in-alt");
     }
 
     // Suntik data pendaftaran manual ke panel admin
@@ -1067,4 +1067,36 @@ function handleAIKeyPress(e) {
         e.preventDefault();
         sendAIChat();
     }
+}
+
+/* ==========================================================================
+   ENGINE UTAMA PREMIUM POP-UP NOTIFICATION (TOAST)
+   ========================================================================== */
+function showHyvaToast(message, iconClass = "fas fa-info-circle") {
+    // Buat container jika belum ada di dokumen web
+    let container = document.querySelector('.hyva-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'hyva-toast-container';
+        document.body.appendChild(container);
+    }
+
+    // Buat elemen struktur kotak pop-up
+    const toast = document.createElement('div');
+    toast.className = 'hyva-toast';
+    toast.innerHTML = `<i class="${iconClass}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+
+    // Efek Slide Masuk Animasi
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 50);
+
+    // Otomatis Hilang dalam 4 Detik
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => {
+            toast.remove();
+        }, 400); // Tunggu animasi mengecil selesai sebelum dihapus dari HTML
+    }, 4000);
 }
