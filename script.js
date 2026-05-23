@@ -1,7 +1,4 @@
 /* ==========================================================================
-   1. DATA PRODUK (DATABASE)
-   ========================================================================== */
-/* ==========================================================================
    1. DATA PRODUK (DATABASE DINAMIS TERINTEGRASI DASHBOARD ADMIN)
    ========================================================================== */
 const defaultMasterProducts = [
@@ -49,7 +46,6 @@ function displayProducts(filteredItems = products) {
         const item = document.createElement('div');
         item.className = 'product-card';
         
-        // Perbaikan Utama: Menambahkan class="notranslate" dan translate="no" pada nama brand
         item.innerHTML = `
             <div onclick="openDetail(${product.id})" style="cursor:pointer">
                 <img src="${product.img}" alt="${product.name}">
@@ -139,12 +135,11 @@ function saveCartToStorage() {
 }
 
 function addToCart(id) {
-    // 1. PROTEKSI: Cek apakah user sudah login terlebih dahulu
     const loggedInUser = localStorage.getItem('loggedInUser');
     if (!loggedInUser) {
         alert("Pemberitahuan: Anda harus masuk/login terlebih dahulu untuk menambahkan produk ke keranjang belanja!");
         if (typeof openAuthModal === 'function') {
-            openAuthModal('login'); // Otomatis memicu modal login bawaanmu
+            openAuthModal('login');
         }
         return;
     }
@@ -169,7 +164,6 @@ function updateCartUI() {
         if (cart.length === 0) {
             container.innerHTML = `<p style="text-align:center; color:#999; padding:20px 0;">Keranjang belanjaan Anda kosong.</p>`;
         } else {
-            // Render daftar barang belanjaan
             let itemsHtml = cart.map((item, index) => `
                 <div class="cart-item-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
                     <div>
@@ -182,7 +176,6 @@ function updateCartUI() {
                 </div>
             `).join('');
 
-            // 2. FORMULIR ALAMAT PENGIRIMAN (Wajib diisi pelanggan sebelum Checkout)
             let currentUsername = localStorage.getItem('loggedInUser') || '';
             let formShippingHtml = `
                 <div class="form-shipping-address" style="margin-top: 20px; border-top: 2px dashed #8b734b; padding-top: 15px;">
@@ -225,18 +218,17 @@ function toggleCart() {
         document.body.style.overflow = 'auto';
     } else {
         cartModal.style.display = "block";
-        updateCartUI(); // Sinkronkan ulang form input alamat setiap kali keranjang dibuka
+        updateCartUI(); 
         document.body.style.overflow = 'hidden';
     }
 }
 
 /* ==========================================================================
-   5. PEMBAYARAN & CHECKOUT WITH STATUS TRACKING
+   5. PEMBAYARAN & CHECKOUT WITH STATUS TRACKING (INTEGRATED WITH ADMIN)
    ========================================================================== */
 function checkoutWA() {
     if (cart.length === 0) return alert("Keranjang kosong!");
     
-    // Validasi Formulir Alamat Lengkap
     const name = document.getElementById('ship-name')?.value.trim();
     const phone = document.getElementById('ship-phone')?.value.trim();
     const address = document.getElementById('ship-address')?.value.trim();
@@ -250,7 +242,6 @@ function checkoutWA() {
     msg += `%0ATotal: Rp ${total.toLocaleString()}%0A%0A`;
     msg += `*Detail Pengiriman:*%0ANama: ${name}%0AAlamat: ${address}%0ANo HP: ${phone}`;
     
-    // Simpan pesanan ke riwayat lokal terikat akun
     simpanTransaksiKeRiwayat(name, phone, address, total);
 
     window.open(`https://wa.me/628123456789?text=${msg}`, '_blank');
@@ -275,7 +266,6 @@ function checkoutOtomatis() {
         return;
     }
     
-    // Validasi Formulir Alamat Sebelum Membuka QRIS
     const name = document.getElementById('ship-name')?.value.trim();
     const phone = document.getElementById('ship-phone')?.value.trim();
     const address = document.getElementById('ship-address')?.value.trim();
@@ -290,7 +280,6 @@ function checkoutOtomatis() {
         totalLabel.innerText = "Rp " + total.toLocaleString();
     }
     
-    // Amankan data pengiriman sementara ke sessionStorage sebelum konfirmasi sukses
     sessionStorage.setItem('temp_shipping', JSON.stringify({ name, phone, address }));
     
     toggleCart(); 
@@ -321,14 +310,12 @@ function confirmPayment() {
         `Detail Tujuan Pengiriman:\nNama: ${shipping.name}\nNo WA: ${shipping.phone}\nAlamat: ${shipping.address}`
     );
     
-    // Rekam data order ke riwayat pengiriman lokal terikat akun
     simpanTransaksiKeRiwayat(shipping.name, shipping.phone, shipping.address, total);
 
     window.open(`https://wa.me/628123456789?text=${pesan}`, "_blank");
 
     pemicuUlasanSetelahBeli();
 
-    // Reset keranjang belanjaan
     cart = [];
     localStorage.removeItem('hyva_cart');
     sessionStorage.removeItem('temp_shipping');
@@ -345,59 +332,40 @@ function hubungiAdmin() {
     window.open(`https://wa.me/628123456789?text=${pesan}`, "_blank");
 }
 
-// FUNGSI UTAMA: MENYIMPAN RIWAYAT PESANAN BERSTATUS "SEDANG DIKEMAS" TERIKAT AKUN
+// FORMAT SINKRONISASI COBA BACA JUMLAH PRODUK KE GRAFIK (Nama Produk (1x))
 function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga) {
     const loggedInUser = localStorage.getItem('loggedInUser') || 'Guest';
-    const orderId = "HA-" + Math.floor(100000 + Math.random() * 900000); // Membuat ID Unik acak
+    const orderId = "HA-" + Math.floor(100000 + Math.random() * 900000); 
     
+    // Kelompokkan produk yang sama untuk menghitung kuantitas (Qty)
+    let kumpulkanItem = {};
+    cart.forEach(item => {
+        kumpulkanItem[item.name] = (kumpulkanItem[item.name] || 0) + 1;
+    });
+    
+    // Konstruksi string: "Inspired by Romance Wish (2x), Inspired by Aqua Kiss (1x)"
+    let itemsFormattedString = Object.keys(kumpulkanItem).map(name => `${name} (${kumpulkanItem[name]}x)`).join(', ');
+
     const orderData = {
         orderId: orderId,
         username: loggedInUser,
-        items: cart.map(i => i.name).join(', '),
+        items: itemsFormattedString,
         totalPrice: totalHarga,
         shippingAddress: alamat,
         receiverName: nama,
         receiverPhone: wa,
-        status: "Sedang Dikemas", // Status default otomatis pertama kali belanja
+        status: "Sedang Dikemas", 
         date: new Date().toLocaleDateString('id-ID')
     };
 
-    // Push ke basis data database global lokal
     let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
     globalOrders.unshift(orderData);
     localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
 
-    // Segera perbarui tampilan pelacakan di client jika fungsinya tersedia
     if (typeof renderUserOrderStatus === 'function') {
         renderUserOrderStatus();
     }
 }
-
-// MEMAKSA HALAMAN UNTUK MERENDER STATUS PENGIRIMAN AKUN SAAT DI-LOAD
-document.addEventListener("DOMContentLoaded", function () {
-    // Jalankan fungsi render status pengiriman secara instan
-    if (typeof renderUserOrderStatus === 'function') {
-        renderUserOrderStatus();
-    }
-
-    // INTERSEPTOR: Jika user berhasil login lewat modal, langsung perbarui tabel pelacakannya
-    const originalLoginFunction = window.loginUser;
-    if (originalLoginFunction) {
-        window.loginUser = function (username) {
-            originalLoginFunction(username);
-            renderUserOrderStatus();
-        };
-    }
-
-    // INTERSEPTOR: Jika user logout, langsung bersihkan tabel pelacakannya
-    const originalLogoutFunction = window.logoutUser;
-    if (originalLogoutFunction) {
-        window.logoutUser = function () {
-            originalLogoutFunction();
-            renderUserOrderStatus();
-        };
-    }
-});
 
 function renderUserOrderStatus() {
     const loggedInUser = localStorage.getItem('loggedInUser');
@@ -405,7 +373,6 @@ function renderUserOrderStatus() {
     
     if (!statusContainer) return;
     
-    // Kondisi 1: Jika user belum masuk ke akunnya
     if (!loggedInUser) {
         statusContainer.innerHTML = `
             <div class="tracking-card-container" style="text-align: center; padding: 30px;">
@@ -417,10 +384,8 @@ function renderUserOrderStatus() {
     }
     
     let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
-    // Memfilter pesanan agar hanya menampilkan belanjaan milik akun yang sedang login saat ini
     let userOrders = globalOrders.filter(order => order.username === loggedInUser);
     
-    // Kondisi 2: Jika sudah login tapi belum pernah belanja sama sekali
     if (userOrders.length === 0) {
         statusContainer.innerHTML = `
             <div class="tracking-card-container" style="text-align: center; padding: 40px 20px;">
@@ -432,9 +397,8 @@ function renderUserOrderStatus() {
         return;
     }
     
-    // Kondisi 3: Buat baris data pesanan
     let htmlTableRows = userOrders.map(order => {
-        let badgeClass = "badge-packing"; // Default "Sedang Dikemas"
+        let badgeClass = "badge-packing"; 
         if (order.status === "Dikirim") badgeClass = "badge-transit";
         if (order.status === "Selesai") badgeClass = "badge-delivered";
         
@@ -453,7 +417,6 @@ function renderUserOrderStatus() {
         `;
     }).join('');
     
-    // Satukan baris-baris data ke dalam struktur tabel utuh
     statusContainer.innerHTML = `
         <div class="tracking-card-container">
             <h3 class="tracking-title"><i class="fas fa-shipping-fast"></i> Riwayat Pelacakan Pengiriman</h3>
@@ -477,15 +440,13 @@ function renderUserOrderStatus() {
     `;
 }
 
-
 /* ==========================================================================
-   5B. SISTEM REVIEW DINAMIS DENGAN PAGINASI (VERSI TERBARU)
+   6. SISTEM REVIEW DINAMIS DENGAN PAGINASI
    ========================================================================== */
 let currentSelectedRating = 5;
 let currentReviewPage = 1;
-const reviewsPerPage = 3; // Menampilkan 3 ulasan per halaman agar pas 1 baris grid
+const reviewsPerPage = 3; 
 
-// Database Ulasan Bawaan (Default Dummy) agar halaman tidak kosong saat pertama dibuka
 const defaultReviews = [
     { name: "Siti Rahma", rating: 5, text: "Aroma Scandalous-nya bener-bener mewah banget! Manis raspberry-nya berkelas, awet seharian pas dipake kondangan. Repurchase sih ini pasti! ✨", date: "3 hari yang lalu" },
     { name: "Budi Santoso", rating: 5, text: "Gokil sih Dunhill Blue-nya segar abis, pas banget buat dipake ngantor atau abis olahraga. Bau keringat langsung ilang berganti wangi maskulin clean.", date: "1 minggu yang lalu" },
@@ -548,11 +509,10 @@ function saveUserReview(event) {
     let localReviews = JSON.parse(localStorage.getItem('hyvaLocalReviews')) || [];
     localReviews.unshift(reviewData); 
     localStorage.setItem('hyvaLocalReviews', JSON.stringify(localReviews));
-
     localStorage.setItem('hasReviewedHyva', 'true');
     
     closeReviewBox();
-    currentReviewPage = 1; // Kembalikan ke halaman 1 agar ulasan baru langsung terlihat
+    currentReviewPage = 1; 
     renderLocalReviews();
 }
 
@@ -562,25 +522,20 @@ function closeReviewBox() {
     localStorage.setItem('hasReviewedHyva', 'true'); 
 }
 
-// FUNGSI RENDER UTAMA: Menggabungkan review lokal dan default serta membaginya per halaman
 function renderLocalReviews() {
     const displayGrid = document.getElementById('dynamic-testimonials-grid');
     if (!displayGrid) return;
     
-    // Gabungkan review hasil input user (LocalStorage) dengan review default bawaan kita
     let localReviews = JSON.parse(localStorage.getItem('hyvaLocalReviews')) || [];
     let allReviews = [...localReviews, ...defaultReviews];
 
-    // Logika Kalkulasi Paginasi Halaman
     const totalReviews = allReviews.length;
     const totalPages = Math.ceil(totalReviews / reviewsPerPage);
 
-    // Ambil subset data ulasan sesuai halaman aktif saat ini
     const startIndex = (currentReviewPage - 1) * reviewsPerPage;
     const endIndex = startIndex + reviewsPerPage;
     const paginatedReviews = allReviews.slice(startIndex, endIndex);
 
-    // Tampilkan Kartu Review ke Grid Layout Baru
     displayGrid.className = "testimonials-grid-v2"; 
     displayGrid.innerHTML = ''; 
 
@@ -602,16 +557,15 @@ function renderLocalReviews() {
         `;
     });
 
-    // Tampilkan Kontrol Tombol Paginasi di bawah Grid
     renderPaginationControls(totalPages);
 }
 
-// Membuat elemen tombol Navigasi Halaman secara Dinamis
 function renderPaginationControls(totalPages) {
     let paginationContainer = document.getElementById('review-pagination-container');
     
     if (!paginationContainer) {
         const displayGrid = document.getElementById('dynamic-testimonials-grid');
+        if (!displayGrid) return;
         paginationContainer = document.createElement('div');
         paginationContainer.id = 'review-pagination-container';
         displayGrid.parentNode.insertBefore(paginationContainer, displayGrid.nextSibling);
@@ -621,8 +575,6 @@ function renderPaginationControls(totalPages) {
         paginationContainer.innerHTML = ''; 
         return;
     }
-
-    paginationContainer.innerHTML = ''; 
 
     let htmlControls = `
         <div class="review-pagination">
@@ -662,7 +614,7 @@ function changeReviewPage(pageNumber) {
 }
 
 /* ==========================================================================
-   6. SISTEM AUTENTIKASI (LOGIN & DAFTAR)
+   7. SISTEM AUTENTIKASI DENGAN DATABASE SINKRONISASI ADMIN
    ========================================================================== */
 function showAuthTab(type) {
     const loginForm = document.getElementById('form-login');
@@ -697,78 +649,83 @@ function closeAuthModal() {
     if (modal) modal.style.display = 'none';
 }
 
-const GOOGLE_CLIENT_ID = "PASTE_CLIENT_ID_KAMU_DI_SINI.apps.googleusercontent.com";
-
-function loginWithGoogle() {
-    google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredentialResponse
-    });
-    google.accounts.id.prompt(); 
-    google.accounts.id.renderButton(
-        document.getElementById("google-auth-container"),
-        { theme: "outline", size: "large" }
-    );
-}
-
 function handleCredentialResponse(response) {
-    const responsePayload = parseJwt(response.credential);
+    try {
+        let base64Url = response.credential.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const payload = JSON.parse(jsonPayload);
+        const userEmail = payload.email;
+        const userName = payload.given_name || payload.name;
+        
+        // PUSH DATA KE DATABASE ADMIN
+        let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+        if (users.findIndex(u => u.email === userEmail) === -1) {
+            users.push({
+                id: "USR-" + Math.floor(1000 + Math.random() * 9000),
+                name: payload.name,
+                email: userEmail,
+                joinedDate: new Date().toLocaleDateString('id-ID')
+            });
+            localStorage.setItem('hyva_users_database', JSON.stringify(users));
+        }
+        
+        localStorage.setItem('loggedInUser', userName);
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userPhoto', payload.picture);
 
-    localStorage.setItem('loggedInUser', responsePayload.given_name);
-    localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('userPhoto', responsePayload.picture);
-
-    alert("Halo " + responsePayload.name + "! Kamu berhasil login via Google.");
-    
-    updateNavbarUser(); 
-    closeAuthModal();   
-}
-
-function parseJwt(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    return JSON.parse(jsonPayload);
+        alert("Halo " + payload.name + "! Kamu berhasil login via Google.");
+        
+        updateNavbarUser(); 
+        renderUserOrderStatus();
+        closeAuthModal();   
+    } catch (e) {
+        console.error("Gagal memproses otentikasi Google:", e);
+    }
 }
 
 function handleUserAuth(event, type) {
     event.preventDefault();
     let userName = "";
+    let userEmail = "manual-auth@hyva.com";
     
     if (type === 'daftar') {
-        // AMBIL DATA ASLI DARI INPUT NAMA LENGKAP NYA
         const nameInput = document.getElementById('reg-name');
-        if (nameInput && nameInput.value.trim() !== "") {
-            userName = nameInput.value.trim();
-        } else {
-            userName = "Pelanggan Hyva";
-        }
+        const emailInput = document.getElementById('reg-email');
+        userName = nameInput && nameInput.value.trim() !== "" ? nameInput.value.trim() : "Pelanggan Hyva";
+        if(emailInput && emailInput.value.trim() !== "") userEmail = emailInput.value.trim();
+        
         alert("Pendaftaran Berhasil! Halo " + userName);
     } else {
-        // ALUR LOGIN: Ambil data dari input id="login-identity"
         const loginInput = document.getElementById('login-identity');
         if (loginInput && loginInput.value.trim() !== "") {
             const rawValue = loginInput.value.trim();
-            
-            // Jika user memasukkan email (mengandung @), potong depannya untuk nama user navbar sementara
-            if (rawValue.includes('@')) {
-                userName = rawValue.split('@')[0];
-            } else {
-                // Jika user login menggunakan No HP, tampilkan No HP tersebut / nama fallback
-                userName = rawValue;
-            }
+            userName = rawValue.includes('@') ? rawValue.split('@')[0] : rawValue;
+            if(rawValue.includes('@')) userEmail = rawValue;
         } else {
             userName = "Pelanggan Hyva";
         }
         alert("Login Berhasil!");
     }
 
-    // Simpan ke storage & langsung update navbar dengan data nama yang benar
+    // Suntik data pendaftaran manual ke panel admin
+    let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+    if (users.findIndex(u => u.name === userName) === -1) {
+        users.push({
+            id: "USR-" + Math.floor(1000 + Math.random() * 9000),
+            name: userName,
+            email: userEmail,
+            joinedDate: new Date().toLocaleDateString('id-ID')
+        });
+        localStorage.setItem('hyva_users_database', JSON.stringify(users));
+    }
+
     localStorage.setItem('loggedInUser', userName);
     updateNavbarUser();
+    renderUserOrderStatus();
     closeAuthModal();
 }
 
@@ -793,7 +750,6 @@ function confirmLogout() {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userPhoto');
     localStorage.removeItem('hyva_cart'); 
-
     window.location.reload();
 }
 
@@ -817,139 +773,263 @@ function closeLogoutModal() {
 }
 
 /* ==========================================================================
-   7. INISIALISASI & EVENT LISTENERS (VERSI FIXED - SLIDER & TRANSLATE)
+   8. INTERFACE PANEL ADMIN CONTROL (GRAFIK & MANAJEMEN TRANSAKSI)
    ========================================================================== */
-function loadCartOnStart() {
-    const savedData = localStorage.getItem('hyva_cart');
-    if (savedData) {
-        cart = JSON.parse(savedData);
-        updateCartUI();
-    }
+let productsChartInstance = null;
+
+if (document.getElementById('order-table-body')) {
+    document.addEventListener('DOMContentLoaded', () => {
+        loadOrdersDataAndDrawCharts();
+        loadRegisteredUsersData();
+    });
 }
 
-window.onclick = function(event) {
-    const detailModal = document.getElementById('product-detail-modal');
-    const loginModal = document.getElementById('login-modal');
-    if (event.target == detailModal) {
-        closeDetail();
+function loadOrdersDataAndDrawCharts() {
+    let orders = localStorage.getItem('hyva_global_orders');
+    if (!orders) {
+        const sampleData = [
+            { orderId: "HA-4820", username: "Rizky Tri", date: "24/05/2026", receiverName: "Rizky Triyana", receiverPhone: "0857123456", shippingAddress: "Mojokerto", items: "Inspired by Romance Wish (2x)", totalPrice: 96000, status: "Sedang Dikemas" },
+            { orderId: "HA-9102", username: "Amalia Putri", date: "25/05/2026", receiverName: "Amalia Putri", receiverPhone: "0812999922", shippingAddress: "Surabaya", items: "Inspired by Romance Wish (1x), Inspired by Black Opium (1x)", totalPrice: 96000, status: "Dikirim" }
+        ];
+        localStorage.setItem('hyva_global_orders', JSON.stringify(sampleData));
+        orders = JSON.stringify(sampleData);
     }
-    if (event.target == loginModal) {
-        loginModal.style.display = "none";
-    }
-}
+    
+    const parsedOrders = JSON.parse(orders);
+    const tbody = document.getElementById('order-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    let totalRevenue = 0;
+    let productCounts = {};
 
-const authTrigger = document.querySelector('.auth-trigger');
-if(authTrigger) {
-    authTrigger.onclick = function() {
-        const userTextElement = document.getElementById('user-auth-text');
-        if (userTextElement && userTextElement.innerText !== "LOGIN / DAFTAR") {
-            if(confirm("Apakah Anda ingin logout? Keranjang belanja akan dikosongkan.")) {
-                confirmLogout();
-            }
-        } else {
-            openAuthModal();
+    parsedOrders.forEach((order) => {
+        totalRevenue += (order.totalPrice || 0);
+
+        if (order.items) {
+            let itemArray = order.items.split(',');
+            itemArray.forEach(itemName => {
+                let qty = 1;
+                let matchQty = itemName.match(/\((\d+)x\)/);
+                if (matchQty) qty = parseInt(matchQty[1]);
+                
+                let cleanName = itemName.replace(/\(\d+x\)/g, '').trim();
+                if (cleanName) productCounts[cleanName] = (productCounts[cleanName] || 0) + qty;
+            });
         }
-    };
+
+        let badgeClass = "status-packing";
+        if (order.status === "Dikirim") badgeClass = "status-transit";
+        if (order.status === "Selesai") badgeClass = "status-delivered";
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>#${order.orderId}</strong></td>
+            <td style="color:#666; font-size:12px;">${order.date || '-'}</td>
+            <td><span style="font-weight:600;">${order.username}</span></td>
+            <td>
+                <div class="form-grid-shipping">
+                    <strong>Penerima:</strong> ${order.receiverName || order.username}<br>
+                    <strong>WA:</strong> ${order.receiverPhone || '-'}<br>
+                    <strong>Alamat:</strong> ${order.shippingAddress || '-'}
+                </div>
+            </td>
+            <td style="font-weight:500; color:#333;">${order.items}</td>
+            <td style="font-weight:bold; color:#a68b5c;">Rp ${order.totalPrice.toLocaleString()}</td>
+            <td><span class="status-badge ${badgeClass}">${order.status}</span></td>
+            <td>
+                <select class="select-status" onchange="updateStatusPengiriman('${order.orderId}', this.value)">
+                    <option value="Sedang Dikemas" ${order.status === 'Sedang Dikemas' ? 'selected' : ''}>Sedang Dikemas</option>
+                    <option value="Dikirim" ${order.status === 'Dikirim' ? 'selected' : ''}>Dikirim</option>
+                    <option value="Selesai" ${order.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                </select>
+            </td>
+            <td><button class="btn-action btn-delete" onclick="deleteOrder('${order.orderId}')"><i class="fas fa-trash"></i></button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (document.getElementById('total-revenue-label')) {
+        document.getElementById('total-revenue-label').innerText = "Rp " + totalRevenue.toLocaleString('id-ID');
+        document.getElementById('total-orders-label').innerText = parsedOrders.length + " Pesanan";
+    }
+
+    renderProductsChart(productCounts);
 }
 
-// === FUNGSI UTAMA MENJALANKAN SLIDER FOTO BERGANTI OTOMATIS ===
+function renderProductsChart(productCounts) {
+    const canvas = document.getElementById('productsChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    if (productsChartInstance) productsChartInstance.destroy();
+
+    productsChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(productCounts),
+            datasets: [{
+                label: 'Jumlah Botol Terjual',
+                data: Object.values(productCounts),
+                backgroundColor: 'rgba(166, 139, 92, 0.7)',
+                borderColor: 'rgba(166, 139, 92, 1)',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+}
+
+function updateStatusPengiriman(orderId, statusBaru) {
+    let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
+    let index = globalOrders.findIndex(o => String(o.orderId) === String(orderId));
+    if (index !== -1) {
+        globalOrders[index].status = statusBaru;
+        localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
+        loadOrdersDataAndDrawCharts();
+    }
+}
+
+function deleteOrder(orderId) {
+    if (confirm("Hapus permanen invoice pesanan ini dari database admin?")) {
+        let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
+        globalOrders = globalOrders.filter(o => String(o.orderId) !== String(orderId));
+        localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
+        loadOrdersDataAndDrawCharts();
+    }
+}
+
+function loadRegisteredUsersData() {
+    const users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+    const tbody = document.getElementById('user-table-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:20px;">Belum ada konsumen baru terdaftar.</td></tr>`;
+        return;
+    }
+    users.forEach(user => {
+        tbody.innerHTML += `
+            <tr>
+                <td><small style="color:#666;">${user.id}</small></td>
+                <td><strong>${user.name}</strong></td>
+                <td><i class="far fa-envelope"></i> ${user.email}</td>
+                <td><button class="btn-action btn-delete" onclick="deleteUser('${user.id}')">Hapus</button></td>
+            </tr>`;
+    });
+}
+
+function deleteUser(id) {
+    if (confirm("Hapus akun pelanggan ini dari database lokal admin?")) {
+        let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+        users = users.filter(u => u.id !== id);
+        localStorage.setItem('hyva_users_database', JSON.stringify(users));
+        loadRegisteredUsersData();
+    }
+}
+
+/* ==========================================================================
+   9. ABOUT SLIDER MOTORIC & SCROLL EVENT
+   ========================================================================== */
 function initAboutSlider() {
     const slides = document.querySelectorAll(".about-slide");
     const dots = document.querySelectorAll(".slider-dots .dot");
-    
     if (slides.length === 0) return;
     
     let currentSlide = 0;
-    const slideInterval = 3000; // Foto berganti setiap 3 detik
+    const slideInterval = 3000; 
 
     function changeSlide(index) {
-        // Reset index jika melebihi jumlah slide
         if (index >= slides.length) index = 0;
         if (index < 0) index = slides.length - 1;
 
-        // Hilangkan kelas active dari slide dan dot yang sekarang
         slides[currentSlide].classList.remove("active");
         if (dots[currentSlide]) dots[currentSlide].classList.remove("active");
 
-        // Perbarui index slide aktif yang baru
         currentSlide = index;
-
-        // Tambahkan kelas active ke slide dan dot baru
         slides[currentSlide].classList.add("active");
         if (dots[currentSlide]) dots[currentSlide].classList.add("active");
     }
 
-    // Jalankan interval otomatis perputaran gambar
-    let autoSlide = setInterval(() => {
-        changeSlide(currentSlide + 1);
-    }, slideInterval);
+    let autoSlide = setInterval(() => { changeSlide(currentSlide + 1); }, slideInterval);
 
-    // Tambahkan fitur klik manual pada titik (dots) di bawah gambar
     dots.forEach((dot, index) => {
         dot.onclick = function() {
-            clearInterval(autoSlide); // Hentikan sementara timer jika user klik manual
+            clearInterval(autoSlide);
             changeSlide(index);
-            // Jalankan kembali timer otomatis setelah user klik manual
-            autoSlide = setInterval(() => {
-                changeSlide(currentSlide + 1);
-            }, slideInterval);
+            autoSlide = setInterval(() => { changeSlide(currentSlide + 1); }, slideInterval);
         };
     });
 }
 
-// Penggabungan seluruh fungsi trigger awal halaman agar aman & lancar
+/* ==========================================================================
+   10. INISIALISASI UTAMA & SINKRON WINDOWS
+   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
     displayProducts();
     checkReviewEligibility();
     renderLocalReviews(); 
     setRatingReview(5); 
-    initAboutSlider(); // <--- Menjalankan fungsi slider foto di atas saat web dimuat
+    initAboutSlider(); 
+    renderUserOrderStatus();
 });
 
 window.onload = function() {
-    loadCartOnStart();
+    const savedData = localStorage.getItem('hyva_cart');
+    if (savedData) {
+        cart = JSON.parse(savedData);
+        updateCartUI();
+    }
     updateNavbarUser(); 
+    
+    // Inisialisasi Tombol Google Login jika terdeteksi di index
+    if (typeof google !== 'undefined' && document.getElementById("google-login-btn")) {
+        google.accounts.id.initialize({
+            client_id: "704838321040-uq9pbt7c585qesve7eouvsf97f74p5un.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("google-login-btn"),
+            { theme: "outline", size: "medium", text: "signin_with" }
+        );
+    }
 };
 
 window.addEventListener('click', function(event) {
+    const detailModal = document.getElementById('product-detail-modal');
     const qrisModal = document.getElementById('qris-modal');
     const logoutModal = document.getElementById('logout-modal');
     const authModal = document.getElementById('auth-modal');
 
+    if (event.target == detailModal) closeDetail();
     if (event.target == qrisModal) closePayModal();
     if (event.target == logoutModal) closeLogoutModal();
     if (event.target == authModal) closeAuthModal();
 });
 
-// Perbaikan deteksi scroll aman tanpa merusak fungsi slider utama
 window.addEventListener('scroll', function() {
     const aboutSection = document.querySelector('.about-product-section');
     if (!aboutSection) return; 
-    
     const position = aboutSection.getBoundingClientRect().top;
-    const screenHeight = window.innerHeight;
-
-    if (position < screenHeight - 150) {
+    if (position < window.innerHeight - 150) {
         aboutSection.style.opacity = '1';
         aboutSection.style.transform = 'translateY(0)';
     }
 });
 
 /* ==========================================================================
-   8. AI SCENT ATELIER (API CONNECTOR)
+   11. AI SCENT ATELIER (API CONNECTOR)
    ========================================================================== */
 const GEMINI_API_KEY = "AIzaSyAbxUi0qDxN2heRC9lgG6EMvbzs3sNGXjE"; 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
-const SYSTEM_PROMPT = `
-Kamu adalah "Hyva Scent Expert", pakar parfum mewah dari brand Hyva Arvm.
-Tugasmu:
-1. Analisis suasana hati atau cerita pelanggan dan cocokkan dengan katalog produk kami.
-2. Gunakan bahasa yang sopan, puitis, mewah, dan gunakan panggilan 'Kakak'.
-3. WAJIB merekomendasikan produk hanya dari daftar ini: ${JSON.stringify(products.map(p => ({name: p.name, desc: p.desc, karakter: p.karakter})))}.
-4. Format nama produk dengan **Nama Produk** agar sistem web bisa menebalkannya secara otomatis.
-5. Jawab dengan padat, informatif, serta gunakan emoji estetik ✨.
-`;
+const SYSTEM_PROMPT = ` Kamu adalah "Hyva Scent Expert", pakar parfum mewah dari brand Hyva Arvm. Tugasmu menganalisis suasana hati pembeli dan merekomendasikan varian dari katalog kami secara puitis dan berkelas menggunakan kata 'Kakak' ✨.`;
 
 async function sendAIChat() {
     const input = document.getElementById('ai-user-input');
@@ -957,47 +1037,28 @@ async function sendAIChat() {
     const btn = document.getElementById('ai-send-btn');
     
     if (!input || !display || !btn || input.value.trim() === "") return;
-
     const message = input.value.trim();
 
     display.classList.remove('response-placeholder');
-    display.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; color: #d4af37;">
-            <i class="fas fa-spinner fa-spin"></i> Sang Ahli sedang meracik formula aroma terbaik untukmu...
-        </div>
-    `;
+    display.innerHTML = `<div style="color: #d4af37;"><i class="fas fa-spinner fa-spin"></i> Meracik formula aroma...</div>`;
     btn.disabled = true;
-    const originalBtnText = btn.innerHTML;
-    btn.innerHTML = "MENGANALISIS...";
 
     try {
         const response = await fetch(GEMINI_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n\nCerita Pelanggan: " + message }] }]
-            })
+            body: JSON.stringify({ contents: [{ parts: [{ text: SYSTEM_PROMPT + "\n\nKatalog:" + JSON.stringify(products.map(p=>p.name)) + "\n\nCerita: " + message }] }] })
         });
-
         const data = await response.json();
-
         if (data.candidates && data.candidates[0].content.parts[0].text) {
             let botReply = data.candidates[0].content.parts[0].text;
-            
-            botReply = botReply.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#d4af37; font-weight:600;">$1</strong>');
-            botReply = botReply.replace(/\n/g, "<br>");
-            
+            botReply = botReply.replace(/\*\*(.*?)\*\"/g, '<strong style="color:#d4af37;">$1</strong>').replace(/\n/g, "<br>");
             display.innerHTML = botReply;
-        } else {
-            throw new Error("Respon API tidak lengkap");
         }
-
     } catch (error) {
-        console.error("Gemini Error:", error);
-        display.innerHTML = "<span style='color:#ff6b6b;'>Maaf Kak, racikan mengalami kendala teknis. Silakan coba tekan tombol kembali ya ✨</span>";
+        display.innerHTML = "<span>Maaf Kak, mengalami kendala teknis. Coba lagi ya ✨</span>";
     } finally {
         btn.disabled = false;
-        btn.innerHTML = originalBtnText;
     }
 }
 
@@ -1007,26 +1068,3 @@ function handleAIKeyPress(e) {
         sendAIChat();
     }
 }
-
-/* ==========================================================================
-   9. INTERACTIVE ABOUT PRODUCT SLIDER (DIPERTAHANKAN)
-   ========================================================================== */
-document.addEventListener("DOMContentLoaded", function () {
-    const slides = document.querySelectorAll(".about-slide");
-    const dots = document.querySelectorAll(".slider-dots .dot");
-    if(slides.length === 0) return;
-    let currentSlide = 0;
-    const slideInterval = 4000; 
-
-    function changeSlide(index) {
-        if (index >= slides.length) index = 0;
-        if (index < 0) index = slides.length - 1;
-
-        slides[currentSlide].classList.remove("active");
-        if(dots[currentSlide]) dots[currentSlide].classList.remove("active");
-
-        currentSlide = index;
-        slides[currentSlide].classList.add("active");
-        if(dots[currentSlide]) dots[currentSlide].classList.add("active");
-    }
-});
