@@ -413,11 +413,13 @@ function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga, idPelacak) {
     }
 }
 
+// PERBAIKAN UTAMA: Proteksi Kunci Sistem Pelacakan Saat Logout Akun
 function renderUserOrderStatus() {
     const statusContainer = document.getElementById('user-order-tracking-section');
     if (!statusContainer) return;
     
-    // Ambil identitas pembeli aktif dari input data alamat terbaru
+    // Periksa status login aktif secara ketat
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const sessionUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
     let currentIdPelacak = "";
 
@@ -429,21 +431,21 @@ function renderUserOrderStatus() {
         currentIdPelacak = localStorage.getItem('loggedInUser');
     }
     
-    // Jika tidak ada sesi/nama tersimpan sama sekali di browser
-    if (!currentIdPelacak) {
+    // FIX LOCK: Jika user tidak login atau tidak ada nama terdaftar, kosongkan total riwayat pesanan!
+    if (!isLoggedIn || !currentIdPelacak || currentIdPelacak.trim() === "") {
         statusContainer.innerHTML = `
             <div class="tracking-card-container" style="text-align: center; padding: 30px;">
                 <i class="fas fa-user-lock" style="font-size: 30px; color: #ccc; margin-bottom: 10px;"></i>
-                <p style="color:#666; font-size:14px; margin: 0;">Silakan isi <strong>Alamat Pengiriman</strong> untuk melacak status pengiriman paket pesanan Anda secara real-time.</p>
+                <p style="color:#666; font-size:14px; margin: 0;">Silakan isi <strong>Alamat Pengiriman</strong> atau masuk akun untuk melacak status pengiriman paket pesanan Anda secara real-time.</p>
             </div>
         `;
-        return;
+        return; // Putus aliran pembacaan database di bawah
     }
     
     let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
     
     // Filter pesanan berdasarkan nama pembeli langsung (misal: "Bagas")
-    let userOrders = globalOrders.filter(order => order.username === currentIdPelacak);
+    let userOrders = globalOrders.filter(order => String(order.username).toLowerCase() === String(currentIdPelacak).toLowerCase());
     
     if (userOrders.length === 0) {
         statusContainer.innerHTML = `
@@ -497,309 +499,6 @@ function renderUserOrderStatus() {
             </div>
         </div>
     `;
-}
-
-/* ==========================================================================
-   FUNGSI ALAMAT PREMIUM STYLE SHOPEE - EDISI REVISI TOTAL (PASTI SINKRON UI)
-   ========================================================================== */
-
-let hyvaMap = null;
-let hyvaMarker = null;
-
-// 1. Fungsi Membuka Modal Alamat Terstruktur Premium
-function openAddressModal() {
-    let addressModal = document.getElementById('address-modal');
-    
-    // Ambil sesi user aktif, atau gunakan data local lama sebagai cadangan sinkronisasi
-    const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
-    const oldAddress = localStorage.getItem('userAddress') || "";
-    
-    let nama = currentUser.name || localStorage.getItem('loggedInUser') || "";
-    let telepon = currentUser.phone || localStorage.getItem('userPhone') || "";
-    let provinsi = "";
-    let kota = "";
-    let kecamatan = "";
-    let kodePos = "";
-    let detailAlamat = oldAddress && !oldAddress.includes("Kec.") ? oldAddress : (currentUser.address || "");
-    let koordinatText = "";
-
-    // Muat data jika sebelumnya sudah pernah tersimpan terstruktur
-    if (currentUser.structuredAddress) {
-        nama = currentUser.structuredAddress.nama || nama;
-        telepon = currentUser.structuredAddress.telepon || telepon;
-        provinsi = currentUser.structuredAddress.provinsi || "";
-        kota = currentUser.structuredAddress.kota || "";
-        kecamatan = currentUser.structuredAddress.kecamatan || "";
-        kodePos = currentUser.structuredAddress.kodePos || "";
-        detailAlamat = currentUser.structuredAddress.detailAlamat || "";
-        if (currentUser.structuredAddress.lat && currentUser.structuredAddress.lng) {
-            koordinatText = `${currentUser.structuredAddress.lat}, ${currentUser.structuredAddress.lng}`;
-        }
-    }
-
-    if (!addressModal) {
-        addressModal = document.createElement('div');
-        addressModal.id = 'address-modal';
-        addressModal.className = 'hyva-pay-modal';
-        addressModal.style.display = 'flex';
-        addressModal.style.zIndex = '9999';
-        document.body.appendChild(addressModal);
-    }
-
-    addressModal.innerHTML = `
-        <div class="logout-box" style="max-width: 580px; width: 95%; padding: 25px; border-radius: 12px; text-align: left; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;">
-            <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 5px; color: #1a1a1a; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-map-marker-alt" style="color: #a68b5c;"></i> Alamat Pengiriman Baru
-            </h3>
-            <p style="font-size: 12px; color: #777; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Mohon isi informasi pengiriman lengkap serta tandai titik lokasi rumah Kakak.</p>
-            
-            <div style="display: flex; flex-direction: column; gap: 14px;">
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">NAMA LENGKAP</label>
-                        <input type="text" id="addr-nama" value="${nama}" placeholder="Nama Penerima" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">NOMOR TELEPON</label>
-                        <input type="tel" id="addr-telepon" value="${telepon}" placeholder="Contoh: 0822..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px;">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">PROVINSI</label>
-                        <input type="text" id="addr-provinsi" value="${provinsi}" placeholder="Contoh: Jawa Timur" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">KOTA / KABUPATEN</label>
-                        <input type="text" id="addr-kota" value="${kota}" placeholder="Contoh: Mojokerto" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px;">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">KECAMATAN</label>
-                        <input type="text" id="addr-kecamatan" value="${kecamatan}" placeholder="Contoh: Magersari" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">KODE POS</label>
-                        <input type="text" id="addr-kodepos" value="${kodePos}" placeholder="Contoh: 61318" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px;">
-                    </div>
-                </div>
-
-                <div>
-                    <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">ALAMAT LENGKAP (NAMA JALAN, NO. RUMAH, RT/RW, BLOK)</label>
-                    <textarea id="addr-detail" placeholder="Nama Jalan, Nomor Rumah, RT/RW, Kompleks Perumahan, atau Patokan Unit" style="width: 100%; height: 60px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13px; resize: none;">${detailAlamat}</textarea>
-                </div>
-
-                <div>
-                    <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">TITIK KOORDINAT LOKASI (MAPS)</label>
-                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                        <input type="text" id="addr-koordinat" value="${koordinatText}" readonly placeholder="Belum ada lokasi yang ditandai" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; font-size: 12px; color: #555;">
-                        <button type="button" onclick="aktifkanPetaInteraktif()" style="padding: 10px 14px; background: #a68b5c; color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-map-marked-alt"></i> TANDAI TITIK
-                        </button>
-                    </div>
-                    <div id="hyva-map-container" style="display: none; width: 100%; height: 180px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin-top: 10px;"></div>
-                    <p id="map-hint" style="font-size: 11px; color: #888; display: none; margin-top: 4px;"><i class="fas fa-info-circle"></i> Geser pin merah tepat di atas lokasi atap rumah Kakak.</p>
-                </div>
-            </div>
-
-            <div class="logout-actions" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn-login-tokped" onclick="closeAddressModal()" style="padding: 10px 20px; background: #f5f5f5; color: #333; border: 1px solid #ddd; min-width: auto; cursor: pointer; font-size: 12px;">BATAL</button>
-                <button type="button" class="btn-register-tokped" onclick="saveUserAddress()" style="padding: 10px 25px; background: #000; color: #fff; min-width: auto; cursor: pointer; font-size: 12px;">SIMPAN</button>
-            </div>
-        </div>
-    `;
-    addressModal.style.display = 'flex';
-}
-
-// 2. Fungsi Menampilkan Peta Interaktif Leaflet
-function aktifkanPetaInteraktif() {
-    const mapContainer = document.getElementById('hyva-map-container');
-    const mapHint = document.getElementById('map-hint');
-    if (!mapContainer) return;
-
-    mapContainer.style.display = 'block';
-    mapHint.style.display = 'block';
-
-    let defaultLat = -7.4705;
-    let defaultLng = 112.4401;
-
-    const coordsInput = document.getElementById('addr-koordinat').value;
-    if (coordsInput) {
-        const splitCoords = coordsInput.split(',');
-        if (splitCoords.length === 2) {
-            defaultLat = parseFloat(splitCoords[0]);
-            defaultLng = parseFloat(splitCoords[1]);
-        }
-    }
-
-    if (hyvaMap === null) {
-        hyvaMap = L.map('hyva-map-container').setView([defaultLat, defaultLng], 15);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© Hyva Arvm'
-        }).addTo(hyvaMap);
-
-        hyvaMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(hyvaMap);
-
-        hyvaMarker.on('dragend', function () {
-            const position = hyvaMarker.getLatLng();
-            updateKoordinatForm(position.lat, position.lng);
-        });
-
-        hyvaMap.on('click', function (e) {
-            hyvaMarker.setLatLng(e.latlng);
-            updateKoordinatForm(e.latlng.lat, e.latlng.lng);
-        });
-    } else {
-        hyvaMap.invalidateSize();
-        hyvaMap.setView([defaultLat, defaultLng], 15);
-        hyvaMarker.setLatLng([defaultLat, defaultLng]);
-    }
-
-    if (navigator.geolocation && !coordsInput) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            if(hyvaMap) {
-                hyvaMap.setView([userLat, userLng], 17);
-                hyvaMarker.setLatLng([userLat, userLng]);
-                updateKoordinatForm(userLat, userLng);
-            }
-        }, function() {
-            updateKoordinatForm(defaultLat, defaultLng);
-        });
-    } else {
-        updateKoordinatForm(defaultLat, defaultLng);
-    }
-}
-
-// 3. Otomatis Deteksi Pecahan Wilayah (Reverse Geocoding)
-function updateKoordinatForm(lat, lng) {
-    const fixedLat = lat.toFixed(6);
-    const fixedLng = lng.toFixed(6);
-    const elKoor = document.getElementById('addr-koordinat');
-    if (elKoor) elKoor.value = `${fixedLat}, ${fixedLng}`;
-
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${fixedLat}&lon=${fixedLng}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.address) {
-                const elProv = document.getElementById('addr-provinsi');
-                const elKota = document.getElementById('addr-kota');
-                const elKec = document.getElementById('addr-kecamatan');
-                const elPos = document.getElementById('addr-kodepos');
-
-                if (elProv) elProv.value = data.address.state || "";
-                if (elKota) elKota.value = data.address.city || data.address.regency || data.address.county || "";
-                if (elKec) elKec.value = data.address.subdistrict || data.address.village || data.address.suburb || "";
-                if (elPos) elPos.value = data.address.postcode || "";
-            }
-        }).catch(err => console.log("Gagal reverse geocoding"));
-}
-
-// 4. Menutup Modal Alamat
-function closeAddressModal() {
-    const addressModal = document.getElementById('address-modal');
-    if (addressModal) addressModal.style.display = 'none';
-    hyvaMap = null; 
-}
-
-// 5. EKSEKUSI PENYIMPANAN - SINKRONISASI GANDA KE STRUKTUR BARU & VARIABEL LAMA (MENGHINDARI BUG TAMPILAN)
-function saveUserAddress() {
-    const elNama = document.getElementById('addr-nama');
-    const elTelepon = document.getElementById('addr-telepon');
-    const elProvinsi = document.getElementById('addr-provinsi');
-    const elKota = document.getElementById('addr-kota');
-    const elKecamatan = document.getElementById('addr-kecamatan');
-    const elKodePos = document.getElementById('addr-kodepos');
-    const elDetail = document.getElementById('addr-detail');
-    const elKoor = document.getElementById('addr-koordinat');
-
-    if (!elNama || !elTelepon || !elProvinsi || !elKota || !elKecamatan || !elKodePos || !elDetail) return;
-
-    const nama = elNama.value.trim();
-    const telepon = elTelepon.value.trim();
-    const provinsi = elProvinsi.value.trim();
-    const kota = elKota.value.trim();
-    const kecamatan = elKecamatan.value.trim();
-    const kodePos = elKodePos.value.trim();
-    const detailAlamat = elDetail.value.trim();
-    const koordinatText = elKoor ? elKoor.value.trim() : "";
-
-    if (!nama || !telepon || !provinsi || !kota || !kecamatan || !kodePos || !detailAlamat) {
-        if (typeof showHyvaToast === "function") {
-            showHyvaToast("Mohon lengkapi seluruh kolom alamat Kak! ⚠️", "fas fa-exclamation-triangle");
-        } else {
-            alert("Mohon lengkapi seluruh kolom alamat Kak!");
-        }
-        return;
-    }
-
-    let lat = "", lng = "", mapsLink = "";
-    if (koordinatText && koordinatText.includes(',')) {
-        const parts = koordinatText.split(',');
-        lat = parts[0].trim();
-        lng = parts[1].trim();
-        mapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
-    }
-
-    // Bangun struktur alamat teks gabungan premium
-    let alamatGabunganLengkap = `${nama} (${telepon}), ${detailAlamat}, Kec. ${kecamatan}, ${kota}, Prov. ${provinsi}, ${kodePos}`;
-    if (mapsLink) {
-        alamatGabunganLengkap += `\n📍 Link Peta: ${mapsLink}`;
-    }
-
-    // --- STRATEGI SINKRONISASI KUNCI LAMA GUNA MENEMBUS BARRIER RENDER CART ---
-    localStorage.setItem('userAddress', alamatGabunganLengkap);
-    localStorage.setItem('userPhone', telepon);
-    localStorage.setItem('loggedInUser', nama);
-
-    // Tetap kelola ke struktur hyva_logged_in_user untuk backup data account
-    let currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
-    if (!currentUser) {
-        currentUser = { name: nama, phone: telepon, email: "guest@hyvaarvm.com", isGuest: true };
-    }
-    currentUser.address = alamatGabunganLengkap;
-    currentUser.structuredAddress = {
-        nama: nama,
-        telepon: telepon,
-        provinsi: provinsi,
-        kota: kota,
-        kecamatan: kecamatan,
-        kodePos: kodePos,
-        detailAlamat: detailAlamat,
-        lat: lat,
-        lng: lng,
-        mapsLink: mapsLink
-    };
-    localStorage.setItem('hyva_logged_in_user', JSON.stringify(currentUser));
-
-    if (!currentUser.isGuest) {
-        let allUsers = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
-        let userIndex = allUsers.findIndex(u => u.email === currentUser.email || u.phone === currentUser.phone);
-        if (userIndex !== -1) {
-            allUsers[userIndex].address = alamatGabunganLengkap;
-            allUsers[userIndex].structuredAddress = currentUser.structuredAddress;
-            localStorage.setItem('hyva_users_database', JSON.stringify(allUsers));
-        }
-    }
-
-    closeAddressModal();
-
-    if (typeof showHyvaToast === "function") {
-        showHyvaToast("Alamat pengiriman berhasil diperbarui! 📍✨", "fas fa-check-circle");
-    }
-
-    // Paksa render ulang UI halaman keranjang & pelacakan pesanan secara langsung tanpa reload kaku
-    if (typeof updateCartUI === "function") {
-        updateCartUI(); 
-    }
-    if (typeof renderUserOrderStatus === "function") {
-        renderUserOrderStatus();
-    }
 }
 
 /* ==========================================================================
@@ -1151,30 +850,19 @@ function updateNavbarUser() {
 }
 
 function confirmLogout() {
-    // 1. Hapus data otentikasi login bawaan
-    localStorage.removeItem('loggedInUser');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userPhoto');
-    localStorage.removeItem('userPhone');
-    localStorage.removeItem('userAddress');
-
-    // 2. Hapus data sesi alamat premium terstruktur agar tidak tersangkut sebagai Guest
-    localStorage.removeItem('hyva_logged_in_user');
-
-    // 3. Tampilkan pesan perpisahan manis sebelum reload halaman
-    if (typeof showHyvaToast === "function") {
-        showHyvaToast("Kakak berhasil keluar dari akun. Sampai jumpa lagi! 👋✨", "fas fa-sign-out-alt");
+    if (confirm("Apakah Anda yakin ingin keluar?")) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('loggedInUser');
+        localStorage.removeItem('hyva_logged_in_user'); // Bersihkan sesi alamat premium
+        
+        // Panggil fungsi ini agar tabel pelacakan langsung dikunci kembali
+        if (typeof renderUserOrderStatus === 'function') {
+            renderUserOrderStatus();
+        }
+        
+        showHyvaToast("Anda telah berhasil keluar akun.", "fas fa-sign-out-alt");
+        setTimeout(() => { window.location.reload(); }, 1000);
     }
-
-    // 4. Paksa render ulang UI pelacakan agar langsung kosong seketika sebelum halaman dimuat ulang
-    if (typeof renderUserOrderStatus === 'function') {
-        renderUserOrderStatus();
-    }
-
-    // 5. Muat ulang halaman setelah jeda singkat agar memori browser kembali bersih total
-    setTimeout(() => {
-        window.location.reload();
-    }, 1200);
 }
 
 function handleProfileClick() {
