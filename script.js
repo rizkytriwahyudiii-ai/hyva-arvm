@@ -1070,10 +1070,9 @@ function handleAIKeyPress(e) {
 }
 
 /* ==========================================================================
-   ENGINE UTAMA PREMIUM POP-UP NOTIFICATION (TOAST)
+   ENGINE UTAMA PREMIUM POP-UP NOTIFICATION (TOAST MECHANISM MODERN)
    ========================================================================== */
 function showHyvaToast(message, iconClass = "fas fa-info-circle") {
-    // Buat container jika belum ada di dokumen web
     let container = document.querySelector('.hyva-toast-container');
     if (!container) {
         container = document.createElement('div');
@@ -1081,22 +1080,30 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
         document.body.appendChild(container);
     }
 
-    // Buat elemen struktur kotak pop-up
+    // Mengubah format pesan agar nama produk otomatis ter-highlight cetak tebal lembut
+    let formattedMessage = message.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');
+
     const toast = document.createElement('div');
     toast.className = 'hyva-toast';
-    toast.innerHTML = `<i class="${iconClass}"></i> <span>${message}</span>`;
+    toast.innerHTML = `
+        <div class="hyva-toast-icon-wrapper">
+            <i class="${iconClass}"></i>
+        </div>
+        <div class="hyva-toast-text">${formattedMessage}</div>
+    `;
+    
     container.appendChild(toast);
 
-    // Efek Slide Masuk Animasi
+    // Animasi Muncul
     setTimeout(() => {
         toast.classList.add('show');
     }, 50);
 
-    // Otomatis Hilang dalam 4 Detik
+    // Animasi Menghilang Otomatis dalam 4 detik
     setTimeout(() => {
         toast.classList.add('hide');
         setTimeout(() => {
             toast.remove();
-        }, 400); // Tunggu animasi mengecil selesai sebelum dihapus dari HTML
+        }, 450);
     }, 4000);
 }
