@@ -81,9 +81,30 @@
         
         .form-grid-shipping { font-size: 12px; color: #475569; background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #a68b5c; margin-top: 5px; line-height: 1.6; }
         .prod-img-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
+
+        /* MODAL DIALOG MODEREN KUSTOM */
+        .hyva-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 99999; display: none; align-items: center; justify-content: center; animation: fadeInModal 0.3s ease; }
+        .hyva-modal-box { background: white; border-radius: 14px; width: 90%; max-width: 400px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); text-align: center; }
+        .hyva-modal-icon { width: 50px; height: 50px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto 15px auto; }
+        .hyva-modal-title { font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 10px; }
+        .hyva-modal-text { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 20px; }
+        .hyva-modal-actions { display: flex; gap: 10px; justify-content: center; }
+        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
+
+<div id="delete-confirm-modal" class="hyva-modal-overlay">
+    <div class="hyva-modal-box">
+        <div class="hyva-modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="hyva-modal-title">Konfirmasi Hapus</div>
+        <div class="hyva-modal-text">Apakah Kakak yakin ingin menghapus permanen varian parfum ini dari katalog master toko?</div>
+        <div class="hyva-modal-actions">
+            <button id="confirm-delete-btn" class="btn" style="background: #ef4444; color: white;">Ya, Hapus</button>
+            <button onclick="closeDeleteModal()" class="btn btn-secondary">Batal</button>
+        </div>
+    </div>
+</div>
 
 <div class="admin-wrapper">
     <div class="header-panel">
@@ -254,6 +275,36 @@
 
 <script src="script.js"></script>
 <script>
+    let productToDeleteId = null;
+
+    // ENGINE UTAMA PREMIUM POP-UP NOTIFICATION (TOAST) DI PANEL ADMIN
+    function showHyvaToast(message, iconClass = "fas fa-info-circle") {
+        let container = document.querySelector('.hyva-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'hyva-toast-container';
+            document.body.appendChild(container);
+        }
+        
+        let formattedMessage = message.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');
+        
+        const toast = document.createElement('div');
+        toast.className = 'hyva-toast';
+        toast.innerHTML = `
+            <div class="hyva-toast-icon-wrapper">
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="hyva-toast-text">${formattedMessage}</div>
+        `;
+        
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 50);
+        setTimeout(() => {
+            toast.classList.add('hide');
+            setTimeout(() => toast.remove(), 450);
+        }, 4000);
+    }
+
     function openAdminSection(sectionId, currentButton) {
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -261,13 +312,13 @@
         document.getElementById(sectionId).classList.add('active');
         currentButton.classList.add('active');
         
-        // Render ulang grafik jika tab order diklik kembali agar responsive
         if(sectionId === 'orders-section') {
-            loadOrdersDataAndDrawCharts();
+            if (typeof loadOrdersDataAndDrawCharts === 'function') {
+                loadOrdersDataAndDrawCharts();
+            }
         }
     }
 
-    // ENGINE UNTUK MENGELOLA CRUD KATALOG (KODE ASLI SINKRONISASI KATALOG TOKO)
     function getProductsData() {
         return JSON.parse(localStorage.getItem('hyva_products_database')) || [];
     }
@@ -288,7 +339,7 @@
                     <td><small style="color:#64748b; font-size:12px;">${p.karakter || '-'}</small></td>
                     <td>
                         <button class="btn-action btn-edit" onclick="editProduct(${p.id})" title="Edit"><i class="fas fa-edit"></i></button>
-                        <button class="btn-action btn-delete" onclick="deleteProduct(${p.id})" title="Hapus"><i class="fas fa-trash"></i></button>
+                        <button class="btn-action btn-delete" onclick="openDeleteModal(${p.id})" title="Hapus"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -312,7 +363,6 @@
         const shopeeLink = document.getElementById('prod-shopee').value;
 
         if (id) {
-            // MODE UPDATE/EDIT KODE ASLI
             let index = productsList.findIndex(p => String(p.id) === String(id));
             if (index !== -1) {
                 productsList[index] = {
@@ -322,7 +372,6 @@
                 };
             }
         } else {
-            // MODE TAMBAH BARU KODE ASLI
             const newId = productsList.length > 0 ? Math.max(...productsList.map(p => p.id)) + 1 : 1;
             productsList.push({
                 id: newId, brand: "HYVA ARVM", category, name, price, img, desc,
@@ -359,13 +408,26 @@
         document.getElementById('btn-cancel').style.display = 'inline-block';
     }
 
-    function deleteProduct(id) {
-        if (confirm("Hapus permanen varian parfum ini dari katalog toko?")) {
-            let productsList = getProductsData().filter(p => String(p.id) !== String(id));
+    // MODAL DIALOG ENGINE UNTUK MENGGANTIKAN CONFIRM() BAWAAN BROWSER
+    function openDeleteModal(id) {
+        productToDeleteId = id;
+        document.getElementById('delete-confirm-modal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+        productToDeleteId = null;
+        document.getElementById('delete-confirm-modal').style.display = 'none';
+    }
+
+    document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+        if (productToDeleteId) {
+            let productsList = getProductsData().filter(p => String(p.id) !== String(productToDeleteId));
             localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
             loadAdminProducts();
+            closeDeleteModal();
+            showHyvaToast("Sukses: Varian produk berhasil dihapus dari database master center.", "fas fa-trash-alt");
         }
-    }
+    });
 
     function resetProductForm() {
         document.getElementById('product-form').reset();
@@ -374,7 +436,6 @@
         document.getElementById('btn-cancel').style.display = 'none';
     }
 
-    // Jalankan render data katalog saat halaman admin dimuat
     document.addEventListener('DOMContentLoaded', () => {
         loadAdminProducts();
     });
