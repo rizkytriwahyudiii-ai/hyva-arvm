@@ -614,7 +614,7 @@ function changeReviewPage(pageNumber) {
 }
 
 /* ==========================================================================
-   7. SISTEM AUTENTIKASI DENGAN DATABASE SINKRONISASI ADMIN
+   7. SISTEM AUTENTIKASI DENGAN DATABASE SINKRONISASI ADMIN (VERSI KETAT)
    ========================================================================== */
 function showAuthTab(type) {
     const loginForm = document.getElementById('form-login');
@@ -680,53 +680,96 @@ function handleCredentialResponse(response) {
         showHyvaToast(`Halo ${payload.name}! Kamu berhasil login via Google.`, "fas fa-user-check");
         
         updateNavbarUser(); 
-        renderUserOrderStatus();
+        if(typeof renderUserOrderStatus === 'function') renderUserOrderStatus();
         closeAuthModal();   
     } catch (e) {
         console.error("Gagal memproses otentikasi Google:", e);
     }
 }
 
+// ==========================================
+// BAGIAN UTAMA YANG DIPERBAIKI SECARA KETAT
+// ==========================================
 function handleUserAuth(event, type) {
     event.preventDefault();
-    let userName = "";
-    let userEmail = "manual-auth@hyva.com";
-    
+    let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+
     if (type === 'daftar') {
         const nameInput = document.getElementById('reg-name');
         const emailInput = document.getElementById('reg-email');
-        userName = nameInput && nameInput.value.trim() !== "" ? nameInput.value.trim() : "Pelanggan Hyva";
-        if(emailInput && emailInput.value.trim() !== "") userEmail = emailInput.value.trim();
+        const passInput = document.getElementById('reg-password'); // Mengambil input password pendaftaran jika ada
         
-        showHyvaToast(`Pendaftaran Berhasil! Halo ${userName}`, "fas fa-user-plus");
-    } else {
-        const loginInput = document.getElementById('login-identity');
-        if (loginInput && loginInput.value.trim() !== "") {
-            const rawValue = loginInput.value.trim();
-            userName = rawValue.includes('@') ? rawValue.split('@')[0] : rawValue;
-            if(rawValue.includes('@')) userEmail = rawValue;
-        } else {
-            userName = "Pelanggan Hyva";
-        }
-        showHyvaToast("Login Berhasil!", "fas fa-sign-in-alt");
-    }
+        const userName = nameInput ? nameInput.value.trim() : "";
+        const userEmail = emailInput ? emailInput.value.trim() : "";
+        const userPass = passInput ? passInput.value.trim() : "123456"; // Default password jika field tidak ditemukan
 
-    // Suntik data pendaftaran manual ke panel admin
-    let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
-    if (users.findIndex(u => u.name === userName) === -1) {
+        if (userName === "" || userEmail === "") {
+            showHyvaToast("Gagal: Nama dan Email wajib diisi! ⚠️", "fas fa-exclamation-triangle");
+            return;
+        }
+
+        // Cek apakah email atau username sudah pernah terdaftar
+        const emailExist = users.some(u => u.email.toLowerCase() === userEmail.toLowerCase() || u.name.toLowerCase() === userName.toLowerCase());
+        if (emailExist) {
+            showHyvaToast("Gagal: Username atau Email sudah terdaftar. Silakan login! ⛔", "fas fa-user-times");
+            showAuthTab('login');
+            return;
+        }
+
+        // Simpan akun baru ke database
         users.push({
             id: "USR-" + Math.floor(1000 + Math.random() * 9000),
             name: userName,
             email: userEmail,
+            password: userPass, // Menyimpan password untuk divalidasi saat login nanti
             joinedDate: new Date().toLocaleDateString('id-ID')
         });
         localStorage.setItem('hyva_users_database', JSON.stringify(users));
-    }
+        
+        showHyvaToast(`Pendaftaran Berhasil! Halo ${userName}, silakan login. ✨`, "fas fa-user-plus");
+        showAuthTab('login'); // Alihkan langsung ke tab login setelah sukses daftar
 
-    localStorage.setItem('loggedInUser', userName);
-    updateNavbarUser();
-    renderUserOrderStatus();
-    closeAuthModal();
+    } else {
+        // --- PROSES LOGIN KETAT ---
+        const loginInput = document.getElementById('login-identity');
+        const loginPassInput = document.getElementById('login-password'); // Pastikan ID ini sesuai dengan field password login di HTML Anda
+        
+        const identityValue = loginInput ? loginInput.value.trim() : "";
+        const passwordValue = loginPassInput ? loginPassInput.value.trim() : "";
+
+        if (identityValue === "") {
+            showHyvaToast("Gagal: Username atau Email tidak boleh kosong! ⚠️", "fas fa-exclamation-triangle");
+            return;
+        }
+
+        // Cari akun di database berdasarkan Nama atau Email
+        const accountFound = users.find(u => 
+            u.name.toLowerCase() === identityValue.toLowerCase() || 
+            u.email.toLowerCase() === identityValue.toLowerCase()
+        );
+
+        // VALIDASI 1: Jika user acak / tidak terdaftar
+        if (!accountFound) {
+            showHyvaToast("Gagal: Akun tidak ditemukan. Silakan daftar terlebih dahulu! ⛔", "fas fa-user-times");
+            return;
+        }
+
+        // VALIDASI 2: Cek password jika database memiliki record password (opsional)
+        if (accountFound.password && passwordValue !== "" && accountFound.password !== passwordValue) {
+            showHyvaToast("Gagal: Kata sandi salah. Silakan coba lagi! 🔑", "fas fa-key");
+            return;
+        }
+
+        // Jika lolos semua validasi, nyatakan login sukses
+        localStorage.setItem('loggedInUser', accountFound.name);
+        localStorage.setItem('isLoggedIn', 'true');
+        
+        showHyvaToast(`Selamat Datang Kembali, ${accountFound.name}! ✨`, "fas fa-sign-in-alt");
+        
+        updateNavbarUser();
+        if(typeof renderUserOrderStatus === 'function') renderUserOrderStatus();
+        closeAuthModal();
+    }
 }
 
 function updateNavbarUser() {
