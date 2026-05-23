@@ -898,6 +898,7 @@ function closeLogoutModal() {
    8. INTERFACE PANEL ADMIN CONTROL (GRAFIK & MANAJEMEN TRANSAKSI)
    ========================================================================== */
 let productsChartInstance = null;
+let pendingDeleteAction = null; // Menyimpan data aksi hapus yang sedang menunggu konfirmasi
 
 if (document.getElementById('order-table-body')) {
     document.addEventListener('DOMContentLoaded', () => {
@@ -966,7 +967,7 @@ function loadOrdersDataAndDrawCharts() {
                     <option value="Selesai" ${order.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
                 </select>
             </td>
-            <td><button class="btn-action btn-delete" onclick="deleteOrder('${order.orderId}')"><i class="fas fa-trash"></i></button></td>
+            <td><button class="btn-action btn-delete" onclick="bukaModalKonfirmasiHapus('order', '${order.orderId}')"><i class="fas fa-trash"></i></button></td>
         `;
         tbody.appendChild(tr);
     });
@@ -1014,16 +1015,80 @@ function updateStatusPengiriman(orderId, statusBaru) {
         globalOrders[index].status = statusBaru;
         localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
         loadOrdersDataAndDrawCharts();
+        if (typeof showHyvaToast === "function") {
+            showHyvaToast(`Status pesanan #${orderId} diperbarui menjadi '${statusBaru}'`, "fas fa-sync-alt");
+        }
     }
 }
 
-function deleteOrder(orderId) {
-    if (confirm("Hapus permanen invoice pesanan ini dari database admin?")) {
+// ==========================================================================
+// MODAL DIALOG KONFIRMASI MODERN KUSTOM (MENGHINDARI POP-UP JADUL WINDOWS)
+// ==========================================================================
+function bukaModalKonfirmasiHapus(tipe, id) {
+    let modalKonfirmasi = document.getElementById('hyva-confirm-modal');
+    if (!modalKonfirmasi) {
+        modalKonfirmasi = document.createElement('div');
+        modalKonfirmasi.id = 'hyva-confirm-modal';
+        modalKonfirmasi.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center;
+            justify-content: center; z-index: 99999; backdrop-filter: blur(4px);
+        `;
+        document.body.appendChild(modalKonfirmasi);
+    }
+
+    let judul = tipe === 'order' ? 'Hapus Invoice Pesanan?' : 'Hapus Akun Pelanggan?';
+    let subjudul = tipe === 'order' ? 
+        `Apakah Anda yakin ingin menghapus permanen data invoice pesanan <strong>#${id}</strong> dari database admin?` : 
+        `Apakah Anda yakin ingin menghapus akun pelanggan dengan ID <strong>#${id}</strong> dari database lokal admin?`;
+
+    modalKonfirmasi.innerHTML = `
+        <div style="background: #fff; width: 90%; max-width: 400px; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.2); animation: hyvaFadeIn 0.3s ease;">
+            <div style="width: 55px; height: 55px; background: #fff5f5; color: #e53e3e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 22px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 18px; color: #1a1a1a; margin-bottom: 8px;">${judul}</h3>
+            <p style="font-size: 13px; color: #666; line-height: 1.5; margin-bottom: 25px; padding: 0 10px;">${subjudul}</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="tutupModalKonfirmasiHapus()" style="padding: 10px 22px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">BATAL</button>
+                <button onclick="eksekusiHapusKustom()" style="padding: 10px 22px; background: #e53e3e; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(229,62,62,0.2);">YA, HAPUS</button>
+            </div>
+        </div>
+    `;
+
+    pendingDeleteAction = { tipe: tipe, id: id };
+    modalKonfirmasi.style.display = 'flex';
+}
+
+function tutupModalKonfirmasiHapus() {
+    const modalKonfirmasi = document.getElementById('hyva-confirm-modal');
+    if (modalKonfirmasi) modalKonfirmasi.style.display = 'none';
+    pendingDeleteAction = null;
+}
+
+function eksekusiHapusKustom() {
+    if (!pendingDeleteAction) return;
+    const { tipe, id } = pendingDeleteAction;
+
+    if (tipe === 'order') {
         let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
-        globalOrders = globalOrders.filter(o => String(o.orderId) !== String(orderId));
+        globalOrders = globalOrders.filter(o => String(o.orderId) !== String(id));
         localStorage.setItem('hyva_global_orders', JSON.stringify(globalOrders));
         loadOrdersDataAndDrawCharts();
+        if (typeof showHyvaToast === "function") {
+            showHyvaToast("Invoice pesanan berhasil dihapus secara permanen.", "fas fa-trash-alt");
+        }
+    } else if (tipe === 'user') {
+        let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+        users = users.filter(u => u.id !== id);
+        localStorage.setItem('hyva_users_database', JSON.stringify(users));
+        loadRegisteredUsersData();
+        if (typeof showHyvaToast === "function") {
+            showHyvaToast("Akun pelanggan berhasil dihapus dari database lokal.", "fas fa-user-minus");
+        }
     }
+
+    tutupModalKonfirmasiHapus();
 }
 
 function loadRegisteredUsersData() {
@@ -1042,18 +1107,9 @@ function loadRegisteredUsersData() {
                 <td><small style="color:#666;">${user.id}</small></td>
                 <td><strong>${user.name}</strong></td>
                 <td><i class="far fa-envelope"></i> ${user.email}</td>
-                <td><button class="btn-action btn-delete" onclick="deleteUser('${user.id}')">Hapus</button></td>
+                <td><button class="btn-action btn-delete" onclick="bukaModalKonfirmasiHapus('user', '${user.id}')"><i class="fas fa-trash"></i> Hapus</button></td>
             </tr>`;
     });
-}
-
-function deleteUser(id) {
-    if (confirm("Hapus akun pelanggan ini dari database lokal admin?")) {
-        let users = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
-        users = users.filter(u => u.id !== id);
-        localStorage.setItem('hyva_users_database', JSON.stringify(users));
-        loadRegisteredUsersData();
-    }
 }
 
 /* ==========================================================================
