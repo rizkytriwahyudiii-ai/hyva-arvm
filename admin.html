@@ -334,7 +334,7 @@
         localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
         resetProductForm();
         loadAdminProducts();
-        alert("Sukses: Data katalog produk berhasil diperbarui! ✨");
+        showHyvaToast("Sukses: Data master katalog berhasil disimpan! ✨", "fas fa-check-circle");
     }
 
     function editProduct(id) {
