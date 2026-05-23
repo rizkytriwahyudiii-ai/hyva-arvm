@@ -451,60 +451,106 @@ function renderUserOrderStatus() {
 }
 
 /* ==========================================================================
-   FUNGSI KONTROL UTAMA ADRESS MODAL LUXURY (TAMBAHKAN INI JUGA)
+   FUNGSI MODAL UBAH ALAMAT (PENYELASAIAN ERROR INDEX.HTML & SCRIPT.JS)
    ========================================================================== */
-function openAddressModal() {
-    const modal = document.getElementById('hyva-address-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-        
-        // Memuat otomatis data lama dari LocalStorage jika user sudah pernah menginput
-        const currentAddr = localStorage.getItem('userAddress');
-        const currentPhone = localStorage.getItem('userPhone');
 
-        if (currentAddr && currentAddr !== "Belum diisi") {
-            // Pecah kembali text alamat gabungan agar terdistribusi manis ke baris input masing-masing
-            const parts = currentAddr.split(', Kota/Kab. ');
-            if (parts[0]) document.getElementById('modal-addr-text').value = parts[0];
-            if (parts[1]) {
-                const subParts = parts[1].split(', Provinsi ');
-                if (subParts[0]) document.getElementById('modal-addr-city').value = subParts[0];
-                if (subParts[1]) document.getElementById('modal-addr-prov').value = subParts[1];
-            }
-        }
-        if (currentPhone) {
-            document.getElementById('modal-addr-phone').value = currentPhone;
-        }
+// 1. Fungsi untuk Membuka Modal Ubah Alamat
+function openAddressModal() {
+    // Cari atau buat elemen modal alamat jika belum ada secara dinamis
+    let addressModal = document.getElementById('address-modal');
+    
+    if (!addressModal) {
+        // Membuat struktur elemen HTML modal alamat secara otomatis jika belum tertulis di HTML
+        addressModal = document.createElement('div');
+        addressModal.id = 'address-modal';
+        addressModal.className = 'hyva-pay-modal'; // Menggunakan class modal bawaan yang sudah ada styling-nya
+        addressModal.style.display = 'flex';
+        
+        // Ambil data alamat lama dari localStorage jika ada
+        const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
+        const oldAddress = currentUser.address || "";
+
+        addressModal.innerHTML = `
+            <div class="logout-box" style="max-width: 500px; width: 90%;">
+                <h3><i class="fas fa-map-marker-alt" style="color: #a68b5c;"></i> Perbarui Alamat Pengiriman</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Mohon isi alamat lengkap (Jalan, No. Rumah, RT/RW, Kecamatan, Kota) untuk mempermudah kurir.</p>
+                <textarea id="txt-user-address" style="width: 100%; height: 100px; padding: 10px; font-family: inherit; border: 1px solid #ddd; border-radius: 6px; resize: none; margin-bottom: 20px;" placeholder="Contoh: Jl. Gajah Mada No. 12, RT 02/RW 01, Kec. Magersari, Kota Mojokerto">${oldAddress}</textarea>
+                <div class="logout-actions">
+                    <button class="btn-login-tokped" onclick="closeAddressModal()">Batal</button>
+                    <button class="btn-register-tokped" onclick="saveUserAddress()">Simpan Alamat</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(addressModal);
+    } else {
+        // Jika modal sudah ada, tampilkan kembali dan isi dengan alamat terbaru
+        const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
+        document.getElementById('txt-user-address').value = currentUser.address || "";
+        addressModal.style.display = 'flex';
     }
 }
 
+// 2. Fungsi untuk Menutup Modal Alamat
 function closeAddressModal() {
-    const modal = document.getElementById('hyva-address-modal');
-    if (modal) modal.style.display = 'none';
+    const addressModal = document.getElementById('address-modal');
+    if (addressModal) {
+        addressModal.style.display = 'none';
+    }
 }
 
-function saveHyvaAddress(event) {
-    event.preventDefault();
-    
-    const jalan = document.getElementById('modal-addr-text').value.trim();
-    const kota = document.getElementById('modal-addr-city').value.trim();
-    const provinsi = document.getElementById('modal-addr-prov').value.trim();
-    const wa = document.getElementById('modal-addr-phone').value.trim();
+// 3. Fungsi untuk Menyimpan Alamat ke LocalStorage & Update Tampilan Profil
+function saveUserAddress() {
+    const addressInput = document.getElementById('txt-user-address');
+    if (!addressInput) return;
 
-    if (jalan === "" || kota === "" || provinsi === "" || wa === "") {
-        showHyvaToast("Gagal: Lengkapi seluruh kolom alamat & No WA Kakak! ⚠️", "fas fa-exclamation-circle");
+    const newAddress = addressInput.value.trim();
+    if (newAddress === "") {
+        if (typeof showHyvaToast === "function") {
+            showHyvaToast("Alamat tidak boleh kosong Kak!", "fas fa-exclamation-triangle");
+        } else {
+            alert("Alamat tidak boleh kosong Kak!");
+        }
         return;
     }
 
-    const alamatGabungan = `${jalan}, Kota/Kab. ${kota}, Provinsi ${provinsi}`;
+    // Update data di localStorage user yang sedang login
+    let currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
     
-    // Simpan ke database lokal browser
-    localStorage.setItem('userAddress', alamatGabungan);
-    localStorage.setItem('userPhone', wa);
-    
-    showHyvaToast("Alamat pengiriman berhasil diperbarui! ✨ 📍", "fas fa-check-circle");
+    if (!currentUser) {
+        // Jika ternyata user belum login tapi menekan tombol ini
+        if (typeof showHyvaToast === "function") {
+            showHyvaToast("Silakan login terlebih dahulu ya Kak.", "fas fa-user-lock");
+        }
+        return;
+    }
+
+    currentUser.address = newAddress;
+    localStorage.setItem('hyva_logged_in_user', JSON.stringify(currentUser));
+
+    // Update data di master account list agar sinkron saat login ulang berikutnya
+    let allUsers = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
+    let userIndex = allUsers.findIndex(u => u.email === currentUser.email || u.phone === currentUser.phone);
+    if (userIndex !== -1) {
+        allUsers[userIndex].address = newAddress;
+        localStorage.setItem('hyva_users_database', JSON.stringify(allUsers));
+    }
+
+    // Tutup modal dan beri sinyal sukses ke pengguna
     closeAddressModal();
-    updateCartUI(); // Segarkan tampilan ringkasan alamat di keranjang
+    
+    if (typeof showHyvaToast === "function") {
+        showHyvaToast("Alamat rumah Kakak berhasil diperbarui ✨", "fas fa-check-circle");
+    } else {
+        alert("Alamat berhasil diperbarui!");
+    }
+
+    // Refresh section pelacakan pesanan jika fungsi merendernya tersedia di script.js Anda
+    if (typeof renderOrderTracking === "function") {
+        renderOrderTracking();
+    } else {
+        // Fallback jika tidak ada, muat ulang halaman dengan mulus
+        setTimeout(() => { location.reload(); }, 1000);
+    }
 }
 
 /* ==========================================================================
