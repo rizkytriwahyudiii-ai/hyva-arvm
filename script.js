@@ -224,33 +224,50 @@ function toggleCart() {
 }
 
 /* ==========================================================================
-   5. PEMBAYARAN & CHECKOUT WITH STATUS TRACKING (INTEGRATED WITH ADRESS MODAL)
+   5. PEMBAYARAN & CHECKOUT SINKRON ALAMAT PREMIUM (FIX COMPATIBILITY)
    ========================================================================== */
+
+// Fungsi Pembantu: Mengambil Data Alamat Terbaru Secara Aman dari Struktur Data Baru
+function dapatkanDataAlamatSesi() {
+    const sessionUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
+    
+    // Jika tidak ada user login atau data alamat kosong
+    if (!sessionUser || !sessionUser.address || sessionUser.address.trim() === "" || sessionUser.address === "Belum diisi") {
+        return null;
+    }
+    
+    // Kembalikan nama, wa, dan alamat lengkap gabungan
+    return {
+        nama: sessionUser.structuredAddress ? sessionUser.structuredAddress.nama : (sessionUser.name || "Pelanggan Hyva"),
+        telepon: sessionUser.structuredAddress ? sessionUser.structuredAddress.telepon : (sessionUser.phone || "-"),
+        alamatLengkap: sessionUser.address,
+        usernameDatabase: sessionUser.email || "Guest_" + (sessionUser.phone || "Anonim") // Identitas unik pelacakan
+    };
+}
+
 function checkoutWA() {
     if (cart.length === 0) {
         showHyvaToast("Gagal: Keranjang belanjaan Kakak masih kosong! 🛒", "fas fa-shopping-cart");
         return;
     }
     
-    const savedAddress = localStorage.getItem('userAddress');
-    const savedPhone = localStorage.getItem('userPhone') || '-';
-    const loggedInUser = localStorage.getItem('loggedInUser') || 'Pelanggan Hyva';
+    const dataAlamat = dapatkanDataAlamatSesi();
 
-    // VALIDASI PEMBLOKIRAN DATA KOSONG
-    if (!savedAddress || savedAddress.trim() === "" || savedAddress === "Belum diisi") {
+    // VALIDASI INTEGRASI ALAMAT BARU
+    if (!dataAlamat) {
         showHyvaToast("Alamat pengiriman belum diatur. Yuk lengkapi terlebih dahulu! 📍", "fas fa-map-marked-alt");
-        toggleCart(); // Tutup keranjang agar modal alamat terlihat jelas
+        if (typeof toggleCart === "function") toggleCart(); // Tutup keranjang agar modal alamat terlihat jelas
         openAddressModal();
-        return; // BERHENTI MUTLAK
+        return; 
     }
 
     let msg = `Halo Hyva Arvm, saya mau pesan:%0A`;
     cart.forEach(i => msg += `- ${i.name}%0A`);
     let total = cart.reduce((s, i) => s + i.price, 0);
     msg += `%0ATotal: Rp ${total.toLocaleString()}%0A%0A`;
-    msg += `*Detail Pengiriman:*%0ANama Penerima: ${loggedInUser}%0AAlamat: ${savedAddress}%0ANo HP/WA: ${savedPhone}`;
+    msg += `*Detail Pengiriman:*%0A${dataAlamat.alamatLengkap}`;
     
-    simpanTransaksiKeRiwayat(loggedInUser, savedPhone, savedAddress, total);
+    simpanTransaksiKeRiwayat(dataAlamat.nama, dataAlamat.telepon, dataAlamat.alamatLengkap, total, dataAlamat.usernameDatabase);
     window.open(`https://wa.me/6282245556161?text=${msg}`, '_blank');
 }
 
@@ -273,16 +290,14 @@ function checkoutOtomatis() {
         return;
     }
     
-    const savedAddress = localStorage.getItem('userAddress');
-    const savedPhone = localStorage.getItem('userPhone') || '-';
-    const loggedInUser = localStorage.getItem('loggedInUser') || 'Pelanggan Hyva';
+    const dataAlamat = dapatkanDataAlamatSesi();
 
-    // VALIDASI PEMBLOKIRAN DATA KOSONG
-    if (!savedAddress || savedAddress.trim() === "" || savedAddress === "Belum diisi") {
+    // VALIDASI INTEGRASI ALAMAT BARU
+    if (!dataAlamat) {
         showHyvaToast("Alamat pengiriman belum diatur. Yuk lengkapi terlebih dahulu! 📍", "fas fa-map-marked-alt");
-        toggleCart(); // Tutup keranjang agar modal alamat terlihat jelas
+        if (typeof toggleCart === "function") toggleCart(); 
         openAddressModal();
-        return; // BERHENTI MUTLAK
+        return; 
     }
     
     const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -291,9 +306,14 @@ function checkoutOtomatis() {
         totalLabel.innerText = "Rp " + total.toLocaleString();
     }
     
-    sessionStorage.setItem('temp_shipping', JSON.stringify({ name: loggedInUser, phone: savedPhone, address: savedAddress }));
+    sessionStorage.setItem('temp_shipping', JSON.stringify({ 
+        name: dataAlamat.nama, 
+        phone: dataAlamat.telepon, 
+        address: dataAlamat.alamatLengkap,
+        usernameDatabase: dataAlamat.usernameDatabase
+    }));
     
-    toggleCart(); 
+    if (typeof toggleCart === "function") toggleCart(); 
     openPayModal();
 }
 
@@ -313,15 +333,15 @@ function closePayModal() {
 
 function confirmPayment() {
     const total = cart.reduce((sum, item) => sum + item.price, 0);
-    const shipping = JSON.parse(sessionStorage.getItem('temp_shipping')) || { name: 'Penerima', phone: '-', address: '-' };
+    const shipping = JSON.parse(sessionStorage.getItem('temp_shipping')) || { name: 'Penerima', phone: '-', address: '-', usernameDatabase: 'Guest' };
     
     const pesan = encodeURIComponent(
         `Halo Admin Hyva Arvm, saya sudah bayar sebesar Rp ${total.toLocaleString()}.\n\n` +
         `Produk:\n${cart.map(i => `- ${i.name}`).join('\n')}\n\n` +
-        `Detail Tujuan Pengiriman:\nNama: ${shipping.name}\nNo WA: ${shipping.phone}\nAlamat: ${shipping.address}`
+        `Detail Tujuan Pengiriman:\n${shipping.address}`
     );
     
-    simpanTransaksiKeRiwayat(shipping.name, shipping.phone, shipping.address, total);
+    simpanTransaksiKeRiwayat(shipping.name, shipping.phone, shipping.address, total, shipping.usernameDatabase);
     window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 
     if (typeof pemicuUlasanSetelahBeli === 'function') pemicuUlasanSetelahBeli();
@@ -329,7 +349,8 @@ function confirmPayment() {
     cart = [];
     localStorage.removeItem('hyva_cart');
     sessionStorage.removeItem('temp_shipping');
-    updateCartUI();
+    
+    if (typeof updateCartUI === "function") updateCartUI();
     closePayModal();
     
     showHyvaToast("Pembayaran sukses dicatat! Status diatur menjadi 'Sedang Dikemas'. Cek riwayat pengiriman di dashboard Kakak ✨", "fas fa-check-circle");
@@ -345,8 +366,7 @@ function hubungiAdmin() {
     window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 }
 
-function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga) {
-    const loggedInUser = localStorage.getItem('loggedInUser') || 'Guest';
+function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga, idPelacak) {
     const orderId = "HA-" + Math.floor(100000 + Math.random() * 900000); 
     
     let kumpulkanItem = {};
@@ -358,7 +378,7 @@ function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga) {
 
     const orderData = {
         orderId: orderId,
-        username: loggedInUser,
+        username: idPelacak, // Menggunakan ID Pelacak unik hasil deteksi login/guest
         items: itemsFormattedString,
         totalPrice: totalHarga,
         shippingAddress: alamat,
@@ -378,23 +398,27 @@ function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga) {
 }
 
 function renderUserOrderStatus() {
-    const loggedInUser = localStorage.getItem('loggedInUser');
     const statusContainer = document.getElementById('user-order-tracking-section');
-    
     if (!statusContainer) return;
     
-    if (!loggedInUser) {
+    const sessionUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
+    
+    // JIKA SAMA SEKALI BELUM MEMILIKI SESI (BELUM PERNAH ISI ALAMAT & BELUM LOGIN)
+    if (!sessionUser) {
         statusContainer.innerHTML = `
             <div class="tracking-card-container" style="text-align: center; padding: 30px;">
                 <i class="fas fa-user-lock" style="font-size: 30px; color: #ccc; margin-bottom: 10px;"></i>
-                <p style="color:#666; font-size:14px; margin: 0;">Silakan <strong>Login / Masuk</strong> terlebih dahulu untuk melacak status pengiriman paket pesanan Anda secara real-time.</p>
+                <p style="color:#666; font-size:14px; margin: 0;">Silakan isi <strong>Alamat Pengiriman</strong> atau masuk akun untuk melacak status pengiriman paket pesanan Anda secara real-time.</p>
             </div>
         `;
         return;
     }
     
+    const currentIdPelacak = sessionUser.email || "Guest_" + (sessionUser.phone || "Anonim");
     let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
-    let userOrders = globalOrders.filter(order => order.username === loggedInUser);
+    
+    // Filter berdasarkan ID Pelacak unik (Bisa mendeteksi email user terdaftar atau tag id Guest)
+    let userOrders = globalOrders.filter(order => order.username === currentIdPelacak);
     
     if (userOrders.length === 0) {
         statusContainer.innerHTML = `
