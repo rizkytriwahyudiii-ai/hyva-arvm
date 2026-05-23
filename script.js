@@ -227,7 +227,7 @@ function toggleCart() {
    5. PEMBAYARAN & CHECKOUT SINKRON ALAMAT PREMIUM (FIX COMPATIBILITY)
    ========================================================================== */
 
-// Fungsi Pembantu: Mengambil Data Alamat Terbaru Secara Aman dari Struktur Data Baru
+// Fungsi Pembantu: Mengambil Data Alamat Terbaru Secara Aman & Memaksa Sinkronisasi Nama Asli
 function dapatkanDataAlamatSesi() {
     const sessionUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
     
@@ -236,12 +236,28 @@ function dapatkanDataAlamatSesi() {
         return null;
     }
     
-    // Kembalikan nama, wa, dan alamat lengkap gabungan
+    // AMBIL NAMA TERBAIK: Prioritaskan nama dari input alamat terbaru, lalu nama akun, lalu localStorage lama
+    let namaFix = "";
+    if (sessionUser.structuredAddress && sessionUser.structuredAddress.nama) {
+        namaFix = sessionUser.structuredAddress.nama;
+    } else {
+        namaFix = sessionUser.name || localStorage.getItem('loggedInUser') || "Pelanggan Hyva";
+    }
+
+    // Ambil nomor telepon terbaik
+    let teleponFix = "";
+    if (sessionUser.structuredAddress && sessionUser.structuredAddress.telepon) {
+        teleponFix = sessionUser.structuredAddress.telepon;
+    } else {
+        teleponFix = sessionUser.phone || localStorage.getItem('userPhone') || "-";
+    }
+    
+    // FIX SINKRONISASI IDENTITAS: Gunakan nama asli pembeli sebagai key database pelacakan
     return {
-        nama: sessionUser.structuredAddress ? sessionUser.structuredAddress.nama : (sessionUser.name || "Pelanggan Hyva"),
-        telepon: sessionUser.structuredAddress ? sessionUser.structuredAddress.telepon : (sessionUser.phone || "-"),
+        nama: namaFix,
+        telepon: teleponFix,
         alamatLengkap: sessionUser.address,
-        usernameDatabase: sessionUser.email || "Guest_" + (sessionUser.phone || "Anonim") // Identitas unik pelacakan
+        usernameDatabase: namaFix // Mengunci nama asli pembeli (Contoh: "Bagas") agar tabel pelacakan sinkron
     };
 }
 
@@ -378,7 +394,7 @@ function simpanTransaksiKeRiwayat(nama, wa, alamat, totalHarga, idPelacak) {
 
     const orderData = {
         orderId: orderId,
-        username: idPelacak, // Menggunakan ID Pelacak unik hasil deteksi login/guest
+        username: idPelacak, // Menggunakan nama asli pembeli ("Bagas" atau nama guest baru)
         items: itemsFormattedString,
         totalPrice: totalHarga,
         shippingAddress: alamat,
@@ -401,23 +417,32 @@ function renderUserOrderStatus() {
     const statusContainer = document.getElementById('user-order-tracking-section');
     if (!statusContainer) return;
     
+    // Ambil identitas pembeli aktif dari input data alamat terbaru
     const sessionUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
+    let currentIdPelacak = "";
+
+    if (sessionUser) {
+        currentIdPelacak = sessionUser.structuredAddress && sessionUser.structuredAddress.nama ? 
+                           sessionUser.structuredAddress.nama : 
+                           (sessionUser.name || localStorage.getItem('loggedInUser'));
+    } else {
+        currentIdPelacak = localStorage.getItem('loggedInUser');
+    }
     
-    // JIKA SAMA SEKALI BELUM MEMILIKI SESI (BELUM PERNAH ISI ALAMAT & BELUM LOGIN)
-    if (!sessionUser) {
+    // Jika tidak ada sesi/nama tersimpan sama sekali di browser
+    if (!currentIdPelacak) {
         statusContainer.innerHTML = `
             <div class="tracking-card-container" style="text-align: center; padding: 30px;">
                 <i class="fas fa-user-lock" style="font-size: 30px; color: #ccc; margin-bottom: 10px;"></i>
-                <p style="color:#666; font-size:14px; margin: 0;">Silakan isi <strong>Alamat Pengiriman</strong> atau masuk akun untuk melacak status pengiriman paket pesanan Anda secara real-time.</p>
+                <p style="color:#666; font-size:14px; margin: 0;">Silakan isi <strong>Alamat Pengiriman</strong> untuk melacak status pengiriman paket pesanan Anda secara real-time.</p>
             </div>
         `;
         return;
     }
     
-    const currentIdPelacak = sessionUser.email || "Guest_" + (sessionUser.phone || "Anonim");
     let globalOrders = JSON.parse(localStorage.getItem('hyva_global_orders')) || [];
     
-    // Filter berdasarkan ID Pelacak unik (Bisa mendeteksi email user terdaftar atau tag id Guest)
+    // Filter pesanan berdasarkan nama pembeli langsung (misal: "Bagas")
     let userOrders = globalOrders.filter(order => order.username === currentIdPelacak);
     
     if (userOrders.length === 0) {
