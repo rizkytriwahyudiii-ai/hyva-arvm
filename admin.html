@@ -3,88 +3,381 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Analytics Admin | Hyva Arvm</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <title>Master Control Center | Hyva Arvm Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
-        body { background-color: #f4f6f9; padding: 25px; color: #333; }
-        .admin-wrapper { max-width: 1400px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        body { background-color: #f8fafc; color: #1e293b; padding: 30px; }
+        
+        .admin-wrapper { max-width: 1400px; margin: 0 auto; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+        
+        /* HEADER STYLE LUXURY */
         .header-panel { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #a68b5c; padding-bottom: 20px; margin-bottom: 30px; }
-        .menu-tabs { display: flex; gap: 15px; margin-bottom: 30px; border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; }
-        .tab-btn { padding: 12px 24px; border: none; background: none; font-size: 14px; font-weight: 600; cursor: pointer; color: #7f8c8d; transition: 0.3s; position: relative; }
-        .tab-btn.active { color: #a68b5c; }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -12px; left: 0; width: 100%; height: 3px; background-color: #a68b5c; }
-        .tab-content { display: none; }
+        .header-panel h2 { font-size: 22px; font-weight: 600; color: #0f172a; display: flex; align-items: center; gap: 12px; }
+        .view-shop-btn { text-decoration: none; color: #475569; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 10px 20px; border-radius: 8px; transition: 0.2s; }
+        .view-shop-btn:hover { background: #e2e8f0; color: #0f172a; }
+
+        /* NAVIGATION TABS */
+        .menu-tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 22px; border: none; background: none; font-size: 13px; font-weight: 600; cursor: pointer; color: #64748b; transition: 0.3s; position: relative; border-radius: 6px; }
+        .tab-btn:hover { background: #f8fafc; color: #0f172a; }
+        .tab-btn.active { color: #a68b5c; background: #fffcf5; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -13px; left: 0; width: 100%; height: 3px; background-color: #a68b5c; }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* WIDGET GRID STATISTIK */
         .analytics-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 35px; }
         @media(max-width: 992px) { .analytics-grid { grid-template-columns: 1fr; } }
-        .card-analytics { background: #fff; border: 1px solid #e2e8f0; padding: 24px; border-radius: 8px; }
-        .revenue-box { text-align: center; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%); color: white; border-radius: 8px; padding: 30px; }
-        .revenue-box h2 { font-size: 32px; color: #a68b5c; margin-top: 5px; }
-        .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; border: 1px solid #e2e8f0; border-radius: 6px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background-color: #1a1a1a; color: white; padding: 14px; font-size: 13px; text-transform: uppercase; }
-        td { padding: 14px; border-bottom: 1px solid #edf2f7; font-size: 13px; }
+        .card-analytics { background: #fff; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; }
+        .revenue-box { text-align: center; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; border-radius: 12px; padding: 30px; box-shadow: 0 8px 20px rgba(15,23,42,0.1); }
+        .revenue-box h4 { opacity: 0.7; font-weight: 400; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+        .revenue-box h2 { font-size: 34px; color: #a68b5c; font-weight: 600; margin-bottom: 15px; }
+
+        /* LAYOUT KATALOG MANAGEMENT (FORM & DATA GRID) */
+        .catalog-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        @media(max-width: 1024px) { .catalog-grid { grid-template-columns: 1fr; } }
+        
+        /* FORM STYLING */
+        .form-container { background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; height: fit-content; position: sticky; top: 20px; }
+        .form-container h3 { font-size: 15px; margin-bottom: 20px; color: #0f172a; border-left: 4px solid #a68b5c; padding-left: 10px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: #475569; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 14px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; background: #fff; transition: 0.2s; }
+        .form-control:focus { border-color: #a68b5c; box-shadow: 0 0 0 3px rgba(166,139,92,0.1); }
+        .row-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* RESPONSIVE DATA TABLE */
+        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px; background: white; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #0f172a; color: white; padding: 15px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 15px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; vertical-align: middle; }
+        tr:hover { background-color: #f8fafc; }
+        
+        /* BADGES & BUTTONS */
         .status-badge { padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 600; text-transform: uppercase; display: inline-block; }
         .status-packing { background: #fef3c7; color: #d97706; }
         .status-transit { background: #e0f2fe; color: #0369a1; }
         .status-delivered { background: #dcfce7; color: #15803d; }
-        .select-status { padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; }
-        .btn-action { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .btn-delete { background: #ef4444; color: white; }
-        .form-grid-shipping { font-size: 12px; color: #475569; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 4px solid #a68b5c; margin-top: 5px; line-height: 1.5; }
+
+        .select-status { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white; cursor: pointer; outline: none; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: #0f172a; color: white; width: 100%; justify-content: center; }
+        .btn-primary:hover { background: #1e293b; }
+        .btn-secondary { background: #e2e8f0; color: #334155; }
+        .btn-secondary:hover { background: #cbd5e1; }
+        
+        .btn-action { padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; color: white; display: inline-flex; align-items: center; justify-content: center; margin-right: 4px; }
+        .btn-edit { background: #0f172a; }
+        .btn-edit:hover { background: #1e293b; }
+        .btn-delete { background: #ef4444; }
+        .btn-delete:hover { background: #dc2626; }
+        
+        .form-grid-shipping { font-size: 12px; color: #475569; background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 4px solid #a68b5c; margin-top: 5px; line-height: 1.6; }
+        .prod-img-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body>
+
 <div class="admin-wrapper">
     <div class="header-panel">
-        <h2><i class="fas fa-chart-line" style="color: #a68b5c;"></i> Hyva Arvm Control Center</h2>
-        <a href="index.html" style="text-decoration:none; color:#333; font-weight:600;"><i class="fas fa-store"></i> Toko Utama</a>
+        <h2><i class="fas fa-sliders-h" style="color: #a68b5c;"></i> Hyva Arvm Management Control Center</h2>
+        <div>
+            <a href="index.html" class="view-shop-btn"><i class="fas fa-external-link-alt"></i> Buka Marketplace</a>
+        </div>
     </div>
+
     <div class="menu-tabs">
-        <button class="tab-btn active" onclick="openAdminSection('orders-section', this)">Penjualan & Pelacakan Order</button>
-        <button class="tab-btn" onclick="openAdminSection('users-section', this)">Database Konsumen</button>
+        <button class="tab-btn active" onclick="openAdminSection('orders-section', this)"><i class="fas fa-shipping-fast"></i> Kelola & Atur Pengiriman</button>
+        <button class="tab-btn" onclick="openAdminSection('catalog-section', this)"><i class="fas fa-boxes"></i> Manajemen Katalog Produk</button>
+        <button class="tab-btn" onclick="openAdminSection('users-section', this)"><i class="fas fa-users"></i> Daftar Pelanggan Terdaftar</button>
     </div>
+
     <div id="orders-section" class="tab-content active">
         <div class="analytics-grid">
             <div class="card-analytics">
-                <h4 style="margin-bottom:20px;"><i class="fas fa-fire" style="color: #e67e22;"></i> Produk Terlaris</h4>
-                <div style="position: relative; height:270px; width:100;"><canvas id="productsChart"></canvas></div>
+                <h4 style="margin-bottom:15px; font-size:14px; font-weight:600;"><i class="fas fa-chart-bar" style="color: #a68b5c;"></i> Grafik Analisis Produk Paling Banyak Dibeli</h4>
+                <div style="position: relative; height:240px; width:100%;">
+                    <canvas id="productsChart"></canvas>
+                </div>
             </div>
             <div class="revenue-box">
-                <h4>TOTAL OMSET</h4>
+                <h4>Total Omset Penjualan</h4>
                 <h2 id="total-revenue-label">Rp 0</h2>
-                <h5 style="margin-top:15px;" id="total-orders-label">0 Pesanan</h5>
+                <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin-bottom:15px;">
+                <h3 id="total-orders-label" style="font-size: 18px; font-weight:400;">0 Transaksi Masuk</h3>
             </div>
         </div>
+
+        <h3 style="font-size: 15px; margin-bottom: 15px; font-weight: 600;"><i class="fas fa-list-alt"></i> Daftar Logistik Pesanan Masuk</h3>
         <div class="table-responsive">
             <table>
                 <thead>
-                    <tr><th>ID Order</th><th>Tanggal</th><th>User</th><th>Penerima & Alamat</th><th>Produk</th><th>Total</th><th>Status</th><th>Aksi</th><th>Opsi</th></tr>
+                    <tr>
+                        <th>ID Order</th>
+                        <th>Tanggal</th>
+                        <th>Akun User</th>
+                        <th>Penerima & Alamat Tujuan</th>
+                        <th>Item Dipesan</th>
+                        <th>Total Tagihan</th>
+                        <th>Status</th>
+                        <th>Ubah Logistik</th>
+                        <th>Tindakan</th>
+                    </tr>
                 </thead>
                 <tbody id="order-table-body"></tbody>
             </table>
         </div>
     </div>
+
+    <div id="catalog-section" class="tab-content">
+        <div class="catalog-grid">
+            <div class="form-container">
+                <h3 id="form-title"><i class="fas fa-plus-circle"></i> Tambah Produk Baru</h3>
+                <form id="product-form" onsubmit="saveProduct(event)">
+                    <input type="hidden" id="prod-id">
+                    
+                    <div class="form-group">
+                        <label>Nama Varian Parfum</label>
+                        <input type="text" id="prod-name" class="form-control" placeholder="Contoh: Inspired by Sauvage" required>
+                    </div>
+                    
+                    <div class="row-inputs">
+                        <div class="form-group">
+                            <label>Kategori</label>
+                            <select id="prod-category" class="form-control">
+                                <option value="wanita">Wanita</option>
+                                <option value="pria">Pria</option>
+                                <option value="unisex">Unisex</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga Jual (Rp)</label>
+                            <input type="number" id="prod-price" class="form-control" placeholder="48000" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nama File Gambar (Letakkan di Folder Web)</label>
+                        <input type="text" id="prod-img" class="form-control" placeholder="nama-file.jpeg" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Deskripsi Produk</label>
+                        <textarea id="prod-desc" class="form-control" style="height:60px; resize:none;" placeholder="Berikan deskripsi singkat daya tarik produk..." required></textarea>
+                    </div>
+
+                    <div class="row-inputs">
+                        <div class="form-group">
+                            <label>Top Note</label>
+                            <input type="text" id="note-top" class="form-control" placeholder="Floral">
+                        </div>
+                        <div class="form-group">
+                            <label>Heart Note</label>
+                            <input type="text" id="note-heart" class="form-control" placeholder="Mint">
+                        </div>
+                    </div>
+
+                    <div class="row-inputs">
+                        <div class="form-group">
+                            <label>Base Note</label>
+                            <input type="text" id="note-base" class="form-control" placeholder="Vanilla">
+                        </div>
+                        <div class="form-group">
+                            <label>Longevity (%)</label>
+                            <input type="number" id="prod-long" class="form-control" placeholder="85" max="100">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Karakter Kata Kunci Search (Pemisah Spasi)</label>
+                        <input type="text" id="prod-karakter" class="form-control" placeholder="segar manis kayu pria olahraga mall">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Shopee Link Checkout</label>
+                        <input type="url" id="prod-shopee" class="form-control" placeholder="https://shopee.co.id/...">
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Varian</button>
+                        <button type="button" id="btn-cancel" class="btn btn-secondary" style="display:none;" onclick="resetProductForm()">Batal</button>
+                    </div>
+                </form>
+            </div>
+
+            <div>
+                <h3 style="font-size: 15px; margin-bottom: 15px; font-weight:600;"><i class="fas fa-database"></i> Live Database Katalog Toko</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Foto</th>
+                                <th>Nama Varian</th>
+                                <th>Kategori</th>
+                                <th>Harga</th>
+                                <th>Karakter Aroma</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-product-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="users-section" class="tab-content">
+        <h3 style="font-size: 15px; margin-bottom: 15px; font-weight: 600;"><i class="fas fa-shield-alt"></i> Database Akun Pengguna Terintegrasi</h3>
         <div class="table-responsive">
             <table>
-                <thead><tr><th>UID</th><th>Nama Akun</th><th>Email</th><th>Tindakan</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>UID Pelanggan</th>
+                        <th>Nama Akun</th>
+                        <th>Alamat Email</th>
+                        <th>Tanggal Terdaftar</th>
+                        <th>Opsi</th>
+                    </tr>
+                </thead>
                 <tbody id="user-table-body"></tbody>
             </table>
         </div>
     </div>
 </div>
+
 <script src="script.js"></script>
 <script>
     function openAdminSection(sectionId, currentButton) {
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
         document.getElementById(sectionId).classList.add('active');
         currentButton.classList.add('active');
+        
+        // Render ulang grafik jika tab order diklik kembali agar responsive
+        if(sectionId === 'orders-section') {
+            loadOrdersDataAndDrawCharts();
+        }
     }
+
+    // ENGINE UNTUK MENGELOLA CRUD KATALOG (KODE ASLI SINKRONISASI KATALOG TOKO)
+    function getProductsData() {
+        return JSON.parse(localStorage.getItem('hyva_products_database')) || [];
+    }
+
+    function loadAdminProducts() {
+        const productsList = getProductsData();
+        const tbody = document.getElementById('admin-product-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        productsList.forEach(p => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${p.img}" class="prod-img-preview" onerror="this.src='https://placehold.co/50x50?text=Hyva'"></td>
+                    <td><strong>${p.name}</strong><br><small style="color:#777;">${p.brand || 'HYVA ARVM'}</small></td>
+                    <td><span style="text-transform:capitalize;">${p.category}</span></td>
+                    <td style="font-weight:600; color:#a68b5c;">Rp ${p.price.toLocaleString()}</td>
+                    <td><small style="color:#64748b; font-size:12px;">${p.karakter || '-'}</small></td>
+                    <td>
+                        <button class="btn-action btn-edit" onclick="editProduct(${p.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-action btn-delete" onclick="deleteProduct(${p.id})" title="Hapus"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function saveProduct(e) {
+        e.preventDefault();
+        let productsList = getProductsData();
+        const id = document.getElementById('prod-id').value;
+        const name = document.getElementById('prod-name').value;
+        const category = document.getElementById('prod-category').value;
+        const price = parseInt(document.getElementById('prod-price').value);
+        const img = document.getElementById('prod-img').value;
+        const desc = document.getElementById('prod-desc').value;
+        const top = document.getElementById('note-top').value;
+        const heart = document.getElementById('note-heart').value;
+        const base = document.getElementById('note-base').value;
+        const longevity = parseInt(document.getElementById('prod-long').value) || 80;
+        const karakter = document.getElementById('prod-karakter').value;
+        const shopeeLink = document.getElementById('prod-shopee').value;
+
+        if (id) {
+            // MODE UPDATE/EDIT KODE ASLI
+            let index = productsList.findIndex(p => String(p.id) === String(id));
+            if (index !== -1) {
+                productsList[index] = {
+                    ...productsList[index], name, category, price, img, desc,
+                    notes: { top, heart, base }, rating: { ...productsList[index].rating, longevity },
+                    karakter, shopeeLink
+                };
+            }
+        } else {
+            // MODE TAMBAH BARU KODE ASLI
+            const newId = productsList.length > 0 ? Math.max(...productsList.map(p => p.id)) + 1 : 1;
+            productsList.push({
+                id: newId, brand: "HYVA ARVM", category, name, price, img, desc,
+                notes: { top, heart, base }, rating: { top: 5, heart: 4, base: 4, longevity },
+                karakter, shopeeLink
+            });
+        }
+
+        localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
+        resetProductForm();
+        loadAdminProducts();
+        alert("Sukses: Data katalog produk berhasil diperbarui! ✨");
+    }
+
+    function editProduct(id) {
+        const productsList = getProductsData();
+        const p = productsList.find(prod => String(prod.id) === String(id));
+        if (!p) return;
+
+        document.getElementById('prod-id').value = p.id;
+        document.getElementById('prod-name').value = p.name;
+        document.getElementById('prod-category').value = p.category;
+        document.getElementById('prod-price').value = p.price;
+        document.getElementById('prod-img').value = p.img;
+        document.getElementById('prod-desc').value = p.desc;
+        document.getElementById('note-top').value = p.notes ? p.notes.top : '';
+        document.getElementById('note-heart').value = p.notes ? p.notes.heart : '';
+        document.getElementById('note-base').value = p.notes ? p.notes.base : '';
+        document.getElementById('prod-long').value = p.rating ? p.rating.longevity : 80;
+        document.getElementById('prod-karakter').value = p.karakter || '';
+        document.getElementById('prod-shopee').value = p.shopeeLink || '';
+
+        document.getElementById('form-title').innerHTML = `<i class="fas fa-edit"></i> Edit Varian: ${p.name}`;
+        document.getElementById('btn-cancel').style.display = 'inline-block';
+    }
+
+    function deleteProduct(id) {
+        if (confirm("Hapus permanen varian parfum ini dari katalog toko?")) {
+            let productsList = getProductsData().filter(p => String(p.id) !== String(id));
+            localStorage.setItem('hyva_products_database', JSON.stringify(productsList));
+            loadAdminProducts();
+        }
+    }
+
+    function resetProductForm() {
+        document.getElementById('product-form').reset();
+        document.getElementById('prod-id').value = '';
+        document.getElementById('form-title').innerHTML = `<i class="fas fa-plus-circle"></i> Tambah Produk Baru`;
+        document.getElementById('btn-cancel').style.display = 'none';
+    }
+
+    // Jalankan render data katalog saat halaman admin dimuat
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAdminProducts();
+    });
 </script>
 </body>
 </html>
