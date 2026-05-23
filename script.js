@@ -244,7 +244,7 @@ function checkoutWA() {
     
     simpanTransaksiKeRiwayat(name, phone, address, total);
 
-    window.open(`https://wa.me/628123456789?text=${msg}`, '_blank');
+    window.open(`https://wa.me/6282245556161?text=${msg}`, '_blank');
 }
 
 function checkoutShopee() {
@@ -312,7 +312,7 @@ function confirmPayment() {
     
     simpanTransaksiKeRiwayat(shipping.name, shipping.phone, shipping.address, total);
 
-    window.open(`https://wa.me/628123456789?text=${pesan}`, "_blank");
+    window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 
     pemicuUlasanSetelahBeli();
 
@@ -329,7 +329,7 @@ function confirmPayment() {
 function hubungiAdmin() {
     const total = cart.reduce((sum, item) => sum + item.price, 0);
     const pesan = encodeURIComponent(`Halo Admin Hyva Arvm, saya sudah melakukan pembayaran QRIS sebesar Rp ${total.toLocaleString()}. Berikut bukti bayarnya.`);
-    window.open(`https://wa.me/628123456789?text=${pesan}`, "_blank");
+    window.open(`https://wa.me/6282245556161?text=${pesan}`, "_blank");
 }
 
 // FORMAT SINKRONISASI COBA BACA JUMLAH PRODUK KE GRAFIK (Nama Produk (1x))
