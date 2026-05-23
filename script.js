@@ -451,105 +451,140 @@ function renderUserOrderStatus() {
 }
 
 /* ==========================================================================
-   FUNGSI MODAL UBAH ALAMAT (PENYELASAIAN ERROR INDEX.HTML & SCRIPT.JS)
+   FUNGSI MODAL UBAH ALAMAT PREMIUM TERSTRUKTUR (STYLE SHOPEE)
    ========================================================================== */
 
-// 1. Fungsi untuk Membuka Modal Ubah Alamat
+// 1. Fungsi Membuka Modal Alamat Terstruktur
 function openAddressModal() {
-    // Cari atau buat elemen modal alamat jika belum ada secara dinamis
     let addressModal = document.getElementById('address-modal');
     
+    // Ambil data user login saat ini
+    const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
+    
+    // Pecah data alamat lama jika ada (antisipasi jika sebelumnya disimpan sebagai string tunggal)
+    let nama = currentUser.name || "";
+    let telepon = currentUser.phone || "";
+    let kotaKec = "";
+    let detailAlamat = currentUser.address || "";
+
+    // Jika format data sudah berbentuk objek terstruktur baru
+    if (currentUser.structuredAddress) {
+        nama = currentUser.structuredAddress.nama || nama;
+        telepon = currentUser.structuredAddress.telepon || telepon;
+        kotaKec = currentUser.structuredAddress.kotaKec || "";
+        detailAlamat = currentUser.structuredAddress.detailAlamat || "";
+    }
+
     if (!addressModal) {
-        // Membuat struktur elemen HTML modal alamat secara otomatis jika belum tertulis di HTML
         addressModal = document.createElement('div');
         addressModal.id = 'address-modal';
-        addressModal.className = 'hyva-pay-modal'; // Menggunakan class modal bawaan yang sudah ada styling-nya
+        addressModal.className = 'hyva-pay-modal';
         addressModal.style.display = 'flex';
-        
-        // Ambil data alamat lama dari localStorage jika ada
-        const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
-        const oldAddress = currentUser.address || "";
+        addressModal.style.zIndex = '9999';
+        document.body.appendChild(addressModal);
+    }
 
-        addressModal.innerHTML = `
-            <div class="logout-box" style="max-width: 500px; width: 90%;">
-                <h3><i class="fas fa-map-marker-alt" style="color: #a68b5c;"></i> Perbarui Alamat Pengiriman</h3>
-                <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Mohon isi alamat lengkap (Jalan, No. Rumah, RT/RW, Kecamatan, Kota) untuk mempermudah kurir.</p>
-                <textarea id="txt-user-address" style="width: 100%; height: 100px; padding: 10px; font-family: inherit; border: 1px solid #ddd; border-radius: 6px; resize: none; margin-bottom: 20px;" placeholder="Contoh: Jl. Gajah Mada No. 12, RT 02/RW 01, Kec. Magersari, Kota Mojokerto">${oldAddress}</textarea>
-                <div class="logout-actions">
-                    <button class="btn-login-tokped" onclick="closeAddressModal()">Batal</button>
-                    <button class="btn-register-tokped" onclick="saveUserAddress()">Simpan Alamat</button>
+    // Render Struktur Formulir Mirip Shopee dengan Validasi Input
+    addressModal.innerHTML = `
+        <div class="logout-box" style="max-width: 520px; width: 95%; padding: 25px; border-radius: 12px; text-align: left; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <h3 style="font-family: 'Playfair Display', serif; font-size: 20px; margin-bottom: 5px; color: #1a1a1a; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-map-marker-alt" style="color: #a68b5c;"></i> Alamat Baru
+            </h3>
+            <p style="font-size: 12px; color: #777; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Mohon isi informasi pengiriman dengan benar.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">NAMA LENGKAP</label>
+                        <input type="text" id="addr-nama" value="${nama}" placeholder="Nama Penerima" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13.5px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">NOMOR TELEPON</label>
+                        <input type="tel" id="addr-telepon" value="${telepon}" placeholder="Contoh: 0822..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13.5px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">KOTA / KECAMATAN / KODE POS</label>
+                    <input type="text" id="addr-kotakec" value="${kotaKec}" placeholder="Masukkan Kota, Kecamatan, atau Kode Pos" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13.5px;">
+                </div>
+
+                <div>
+                    <label style="font-size: 11px; font-weight: 600; color: #444; display: block; margin-bottom: 5px;">ALAMAT LENGKAP (NAMA JALAN, GEDUNG, NO. RUMAH)</label>
+                    <textarea id="addr-detail" placeholder="Nama Jalan, Nomor Rumah, RT/RW, Blok, atau Patokan Unit Perumahan" style="width: 100%; height: 75px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 13.5px; resize: none;">${detailAlamat}</textarea>
                 </div>
             </div>
-        `;
-        document.body.appendChild(addressModal);
-    } else {
-        // Jika modal sudah ada, tampilkan kembali dan isi dengan alamat terbaru
-        const currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user')) || {};
-        document.getElementById('txt-user-address').value = currentUser.address || "";
-        addressModal.style.display = 'flex';
-    }
+
+            <div class="logout-actions" style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-login-tokped" onclick="closeAddressModal()" style="padding: 10px 20px; background: #f5f5f5; color: #333; border: 1px solid #ddd; min-width: auto; cursor: pointer;">NANTI SAJA</button>
+                <button class="btn-register-tokped" onclick="saveUserAddress()" style="padding: 10px 25px; background: #000; color: #fff; min-width: auto; cursor: pointer;">OK</button>
+            </div>
+        </div>
+    `;
+    addressModal.style.display = 'flex';
 }
 
-// 2. Fungsi untuk Menutup Modal Alamat
+// 2. Fungsi Menutup Modal Alamat
 function closeAddressModal() {
     const addressModal = document.getElementById('address-modal');
-    if (addressModal) {
-        addressModal.style.display = 'none';
-    }
+    if (addressModal) addressModal.style.display = 'none';
 }
 
-// 3. Fungsi untuk Menyimpan Alamat ke LocalStorage & Update Tampilan Profil
+// 3. Fungsi Menyimpan Hasil Gabungan Form Alamat ke Database Local
 function saveUserAddress() {
-    const addressInput = document.getElementById('txt-user-address');
-    if (!addressInput) return;
+    const nama = document.getElementById('addr-nama').value.trim();
+    const telepon = document.getElementById('addr-telepon').value.trim();
+    const kotaKec = document.getElementById('addr-kotakec').value.trim();
+    const detailAlamat = document.getElementById('addr-detail').value.trim();
 
-    const newAddress = addressInput.value.trim();
-    if (newAddress === "") {
+    // Validasi Kelengkapan Data Form
+    if (!nama || !telepon || !kotaKec || !detailAlamat) {
         if (typeof showHyvaToast === "function") {
-            showHyvaToast("Alamat tidak boleh kosong Kak!", "fas fa-exclamation-triangle");
+            showHyvaToast("Mohon lengkapi semua kolom alamat Kak! ⚠️", "fas fa-exclamation-triangle");
         } else {
-            alert("Alamat tidak boleh kosong Kak!");
+            alert("Mohon lengkapi semua kolom alamat Kak!");
         }
         return;
     }
 
-    // Update data di localStorage user yang sedang login
+    // Gabungkan menjadi teks satu baris linier untuk kebutuhan Manifest Kurir / Nota WA
+    const alamatGabunganLengkap = `${nama} (${telepon}), ${detailAlamat}, KOTA/KEC: ${kotaKec}`;
+
     let currentUser = JSON.parse(localStorage.getItem('hyva_logged_in_user'));
-    
-    if (!currentUser) {
-        // Jika ternyata user belum login tapi menekan tombol ini
-        if (typeof showHyvaToast === "function") {
-            showHyvaToast("Silakan login terlebih dahulu ya Kak.", "fas fa-user-lock");
-        }
-        return;
-    }
+    if (!currentUser) return;
 
-    currentUser.address = newAddress;
+    // Simpan dalam format gabungan standar dan format objek struktur terpisah
+    currentUser.address = alamatGabunganLengkap;
+    currentUser.structuredAddress = {
+        nama: nama,
+        telepon: telepon,
+        kotaKec: kotaKec,
+        detailAlamat: detailAlamat
+    };
+
+    // Update Data Sesi Login Saat Ini
     localStorage.setItem('hyva_logged_in_user', JSON.stringify(currentUser));
 
-    // Update data di master account list agar sinkron saat login ulang berikutnya
+    // Sinkronisasikan ke Database Utama Akun agar tersimpan selamanya
     let allUsers = JSON.parse(localStorage.getItem('hyva_users_database')) || [];
     let userIndex = allUsers.findIndex(u => u.email === currentUser.email || u.phone === currentUser.phone);
     if (userIndex !== -1) {
-        allUsers[userIndex].address = newAddress;
+        allUsers[userIndex].address = alamatGabunganLengkap;
+        allUsers[userIndex].structuredAddress = currentUser.structuredAddress;
         localStorage.setItem('hyva_users_database', JSON.stringify(allUsers));
     }
 
-    // Tutup modal dan beri sinyal sukses ke pengguna
     closeAddressModal();
-    
+
     if (typeof showHyvaToast === "function") {
-        showHyvaToast("Alamat rumah Kakak berhasil diperbarui ✨", "fas fa-check-circle");
-    } else {
-        alert("Alamat berhasil diperbarui!");
+        showHyvaToast("Alamat rumah Kakak berhasil disimpan ✨", "fas fa-check-circle");
     }
 
-    // Refresh section pelacakan pesanan jika fungsi merendernya tersedia di script.js Anda
+    // Jalankan render ulang halaman agar melacak rincian ongkir/pengiriman terbaru jika ada
     if (typeof renderOrderTracking === "function") {
         renderOrderTracking();
     } else {
-        // Fallback jika tidak ada, muat ulang halaman dengan mulus
-        setTimeout(() => { location.reload(); }, 1000);
+        setTimeout(() => { location.reload(); }, 800);
     }
 }
 
