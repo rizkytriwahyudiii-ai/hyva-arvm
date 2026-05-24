@@ -1282,15 +1282,16 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
 }
 
 /* ==========================================================================
-   PERBAIKAN FITUR POP-UP UBAH ALAMAT & INTEGRASI QRIS MODAL
+   PERBAIKAN FINAL INTEGRASI MODAL ALAMAT & QRIS (ANTI-GAGAL)
    ========================================================================== */
 
+// 1. Fungsi Utama Pembuka Modal Alamat & Pembayaran
 function openAddressModal() {
-    // 1. Tutup keranjang belanja terlebih dahulu secara otomatis
+    // Tutup keranjang belanja terlebih dahulu secara otomatis
     const cartModal = document.getElementById('cart-modal');
     if (cartModal) cartModal.style.display = 'none';
 
-    // 2. Tampilkan modal pengiriman/pembayaran utama
+    // Tampilkan modal pengiriman/pembayaran utama
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'block';
@@ -1301,10 +1302,10 @@ function openAddressModal() {
         if (stepAddress) stepAddress.style.display = 'block';
         if (stepQris) stepQris.style.display = 'none';
         
-        document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden'; // Kunci scroll layar utama
     }
 
-    // 3. Panggil data provinsi otomatis biar tidak kosong saat terbuka
+    // Ambil data provinsi otomatis agar pilihan tidak kosong saat terbuka
     const provinsiSelect = document.getElementById('checkout-provinsi');
     if (provinsiSelect && provinsiSelect.options.length <= 1) {
         if (typeof loadProvinsi === 'function') {
@@ -1313,11 +1314,15 @@ function openAddressModal() {
     }
 }
 
-// ALIAS JALAN PINTAS: Menghubungkan fungsi klik bawaan sistem lama Kakak ke fungsi pop-up baru
+// 2. JALAN PINTAS (ALIAS): Menangkap semua trigger tombol dari system script Kakak yang lama
 function openShippingAddressModal() {
     openAddressModal();
 }
+function openPayModal() {
+    openAddressModal();
+}
 
+// 3. Fungsi Penutup Modal Utama
 function closeHyvaPayModal() {
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
