@@ -1427,12 +1427,18 @@ async function loadDaftarKecamatan(codeKota) {
     }
 }
 
+/* ==========================================================================
+   PERBAIKAN ENGINE DROPDOWN (PASTI JALAN)
+   ========================================================================== */
 function initWilayahDropdownEngine() {
     const provSelect = document.getElementById('checkout-provinsi');
     const kotaSelect = document.getElementById('checkout-kota');
     const kecSelect = document.getElementById('checkout-kecamatan');
 
+    // 1. Panggil data provinsi SEGERA saat halaman dimuat
     if (provSelect) {
+        loadDaftarProvinsi(); 
+        
         provSelect.addEventListener('change', function () {
             const codeProvinsi = this.value;
             if (codeProvinsi) {
@@ -1456,6 +1462,7 @@ function initWilayahDropdownEngine() {
     }
 }
 
+// Inisialisasi otomatis saat dokumen siap
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initWilayahDropdownEngine);
 } else {
