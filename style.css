@@ -1043,20 +1043,17 @@ html {
 }
 
 /* ==========================================================================
-   10. PEMBAYARAN & REAKSI HOVER METODE CHECKOUT (MINIMALIS LUXURY)
+   10. PEMBAYARAN & QRIS MODAL
    ========================================================================== */
-
-/* Base utama semua tombol agar seragam, rapi & minimalis */
-.btn-payment-method, 
-.btn-wa-checkout, 
-.btn-shopee {
+.btn-payment-method {
     margin-top: 10px;
     margin-bottom: 12px; 
     width: 100%;
     padding: 14px;
-    background-color: #1a1a1a; /* Warna dasar hitam elegan */
-    color: #ffffff;
-    border: 1px solid #333;
+    /* PERBAIKAN: Awalnya background putih, teks & ikon warna gelap #1a1a1a */
+    background-color: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid #ddd;
     font-weight: 600;
     font-size: 12px;
     letter-spacing: 1px;
@@ -1066,44 +1063,189 @@ html {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+    /* Efek transisi halus saat disentuh */
+    transition: all 0.3s ease;
 }
 
-/* --- REAKSI HOVER KHUSUS MASING-MASING TOMBOL --- */
-
-/* 1. Tombol QRIS: Background berubah jadi emas mewah khas Hyva saat disentuh */
+/* PERBAIKAN HOVER: Ketika kursor mendekat, berubah menjadi warna biru profesional */
 .btn-payment-method:hover {
-    background-color: #8b734b; 
-    border-color: #8b734b;
-    transform: translateY(-1px);
+    background-color: #0056b3; /* Warna biru elegan profesional */
+    color: #ffffff;            /* Teks otomatis berubah putih */
+    border-color: #0056b3;
 }
 
-/* 2. Tombol WhatsApp: Background berubah jadi hijau khas WhatsApp saat disentuh */
-.btn-wa-checkout:hover {
-    background-color: #25d366;
-    border-color: #25d366;
-    transform: translateY(-1px);
+.custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 5000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px); 
 }
 
-/* 3. Tombol Shopee: Background berubah jadi oranye khas Shopee saat disentuh */
-.btn-shopee:hover {
-    background-color: #ee4d2d;
-    border-color: #ee4d2d;
-    transform: translateY(-1px);
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideIn 0.4s ease-out;
 }
 
-/* Ukuran Logo Shopee agar tetap proporsional di dalam tombol */
-.shopee-logo {
-    width: 16px;
-    height: 16px;
+.modal-content {
+    width: 90%; 
+    max-width: 800px;
+    flex-direction: row; 
+    display: flex;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 1. Container Utama (Layar Hitam Transparan) */
+.hyva-pay-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+}
+
+/* 2. Kotak Putih Modal */
+.hyva-pay-content {
+    background: #fff;
+    width: 90%;
+    max-width: 420px;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    margin: 0; 
+    animation: hyvaPopCenter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes hyvaPopCenter {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(30px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
+/* 3. Penyesuaian Header agar simetris */
+.hyva-pay-header {
+    padding: 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #f2f2f2;
+    text-align: center;
+}
+
+.hyva-pay-header h3 {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #8b734b;
+    margin: 0;
+}
+
+.close-pay {
+    position: absolute;
+    right: 20px; top: 15px;
+    font-size: 24px; color: #ccc; cursor: pointer;
+}
+
+/* Body Modal */
+.hyva-pay-body {
+    padding: 30px;
+    text-align: center;
+}
+
+.pay-instruction {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* Container QRIS */
+.qris-container {
+    position: relative;
     display: inline-block;
+    padding: 15px;
+    background: #fff;
+    border: 2px solid #8b734b;
+    border-radius: 15px;
+    margin-bottom: 20px;
 }
 
-/* Efek mikro ketika tombol diklik (Menekan Kebawah) */
-.btn-payment-method:active, 
-.btn-wa-checkout:active, 
-.btn-shopee:active {
-    transform: translateY(1px);
+.qris-img {
+    width: 200px;
+    height: 200px;
+    display: block;
+}
+
+/* Total Tagihan */
+.pay-details {
+    margin: 20px 0;
+    padding: 15px;
+    background: #fdfaf4;
+    border-radius: 10px;
+}
+
+.total-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #888;
+}
+
+#qris-total {
+    color: #000;
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 5px;
+}
+
+/* Info Bank */
+.bank-info {
+    font-size: 13px;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+/* Tombol Konfirmasi */
+.btn-confirm-pay {
+    width: 100%;
+    padding: 16px;
+    background: #8b734b;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-confirm-pay:hover {
+    background: #000;
+    transform: translateY(-2px);
 }
 
 /* ==========================================================================
