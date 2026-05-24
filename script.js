@@ -1304,12 +1304,9 @@ function openAddressModal() {
         document.body.style.overflow = 'hidden'; // Kunci scroll layar utama
     }
 
-    // Ambil data provinsi otomatis agar pilihan tidak kosong saat terbuka
-    const provinsiSelect = document.getElementById('checkout-provinsi');
-    if (provinsiSelect && provinsiSelect.options.length <= 1) {
-        if (typeof loadProvinsi === 'function') {
-            loadProvinsi();
-        }
+    // PAKSA MUAT DATA PROVINSI: Dijalankan setiap kali modal dibuka agar data segar terjamin masuk
+    if (typeof loadDaftarProvinsi === 'function') {
+        loadDaftarProvinsi();
     }
 }
 
@@ -1327,6 +1324,41 @@ function closeHyvaPayModal() {
         paymentModal.style.display = 'none';
         document.body.style.overflow = 'auto'; // Mengembalikan scroll layar utama
     }
+}
+
+/* ==========================================================================
+   FUNGSI PENYELAMAT: SAVE SHIPPING ADDRESS (PROSES DATA MENUJU PEMBAYARAN)
+   ========================================================================== */
+function saveShippingAddress() {
+    const nama = document.getElementById('checkout-nama')?.value.trim();
+    const telepon = document.getElementById('checkout-telepon')?.value.trim();
+    const provText = document.getElementById('checkout-provinsi')?.value;
+    const kotaText = document.getElementById('checkout-kota')?.value;
+    const kecText = document.getElementById('checkout-kecamatan')?.value;
+    const detailAlamat = document.getElementById('checkout-detail-alamat')?.value.trim();
+
+    if (!nama || !telepon || !detailAlamat || !provText || !kotaText || !kecText) {
+        showHyvaToast("Gagal: Mohon lengkapi seluruh data alamat pengiriman! ⚠️", "fas fa-exclamation-triangle");
+        return;
+    }
+
+    const alamatLengkap = `${nama} (${telepon})\n${detailAlamat}, Kec. ${kecText}, ${kotaText}, ${provText}`;
+    
+    // Simpan ke localStorage agar sinkron dengan sistem web kamu
+    localStorage.setItem('userAddress', alamatLengkap);
+
+    showHyvaToast("Alamat pengiriman berhasil disimpan! 📍", "fas fa-check-circle");
+    
+    // Alihkan tampilan ke step QRIS Pembayaran di dalam modal yang sama
+    const stepAddress = document.getElementById('pay-step-address');
+    const stepQris = document.getElementById('pay-step-qris');
+    if (stepAddress && stepQris) {
+        stepAddress.style.display = 'none';
+        stepQris.style.display = 'block';
+    }
+    
+    // Jika ada fungsi pembaharuan UI total belanja, panggil di sini
+    if (typeof updateCartUI === 'function') updateCartUI();
 }
 
 /* ==========================================================================
@@ -1441,19 +1473,16 @@ function initWilayahDropdownEngine() {
             }
         });
     }
-    
-    // Panggil muat provinsi pertama kali
-    loadDaftarProvinsi();
 }
 
-// Jalankan Engine Begitu Halaman Selesai Loading murni
+// Jalankan Engine Event Listener Begitu Halaman Selesai Loading murni
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initWilayahDropdownEngine);
 } else {
     initWilayahDropdownEngine();
 }
 
-// 5. JEMBATAN ALIAS: Menghubungkan fungsi klik modal lama agar tidak error
+// 5. JEMBATAN ALIAS: Mencegah error crash jika ada fungsi tombol lama yang memanggil nama ini
 function loadProvinsi() {
     loadDaftarProvinsi();
 }
