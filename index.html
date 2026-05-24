@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="id"> <head>
+<html lang="id">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title class="notranslate" translate="no">Hyva Arvm | Luxury Fragrance</title>
@@ -7,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-   <script src="https://accounts.google.com/gsi/client" async defer></script> 
+    <script src="https://accounts.google.com/gsi/client" async defer></script> 
     <script type="text/javascript"
         src="https://app.sandbox.midtrans.com/snap/snap.js"
         data-client-key="SET_YOUR_CLIENT_KEY_HERE"></script>
@@ -349,21 +350,21 @@
 
                 <div class="hyva-form-group" style="margin-bottom: 15px;">
                     <label for="checkout-provinsi" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-map"></i> Provinsi</label>
-                    <select id="checkout-provinsi" class="hyva-input-style" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none;">
+                    <select id="checkout-provinsi" class="hyva-input-style" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none; color: #333;">
                         <option value="">Pilih Provinsi</option>
                     </select>
                 </div>
                 
                 <div class="hyva-form-group" style="margin-bottom: 15px;">
                     <label for="checkout-kota" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-city"></i> Kota / Kabupaten</label>
-                    <select id="checkout-kota" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none;">
+                    <select id="checkout-kota" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none; color: #333;">
                         <option value="">Pilih Kota / Kabupaten</option>
                     </select>
                 </div>
                 
                 <div class="hyva-form-group" style="margin-bottom: 15px;">
                     <label for="checkout-kecamatan" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-home"></i> Kecamatan</label>
-                    <select id="checkout-kecamatan" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none;">
+                    <select id="checkout-kecamatan" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none; color: #333;">
                         <option value="">Pilih Kecamatan</option>
                     </select>
                 </div>
@@ -377,9 +378,6 @@
                     SIMPAN ALAMAT & LANJUT
                 </button>
             </div>
-        </div>
-    </div>
-</div>
 
             <div id="pay-step-qris" style="display: none;">
                 <p class="pay-instruction" style="text-align: center; font-size: 14px; color: #555;">Silakan scan kode QRIS di bawah ini untuk menyelesaikan pesanan Anda</p>
@@ -416,7 +414,7 @@
 
             <div class="pay-details">
                 <span class="total-label">TOTAL TAGIHAN</span>
-                <h2 id="qris-total">Rp 0</h2>
+                <h2 id="qris-total-alt">Rp 0</h2>
             </div>
 
             <div class="bank-info">
@@ -477,8 +475,6 @@
     </div>
 </div>
 
-<script src="script.js"></script>
-
 <a href="https://wa.me/6282245556161" class="whatsapp-float" target="_blank">
     <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
     <span>Chat Admin</span>
@@ -521,5 +517,6 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
