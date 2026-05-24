@@ -1257,37 +1257,29 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
         container.className = 'hyva-toast-container';
         document.body.appendChild(container);
     }
-
     let formattedMessage = message.replace(/\"([^\"]+)\"/g, '<strong>\"$1\"</strong>');
-
     const toast = document.createElement('div');
     toast.className = 'hyva-toast';
     toast.innerHTML = `
-        <div class="hyva-toast-icon-wrapper">
-            <i class="${iconClass}"></i>
-        </div>
+        <div class="hyva-toast-icon-wrapper"><i class="${iconClass}"></i></div>
         <div class="hyva-toast-text">${formattedMessage}</div>
     `;
-    
     container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 50);
-
+    setTimeout(() => toast.classList.add('show'), 50);
     setTimeout(() => {
         toast.classList.remove('show');
-        setTimeout(() => { toast.remove(); }, 400);
+        setTimeout(() => toast.remove(), 400);
     }, 4000);
 }
 
 /* ==========================================================================
-   ENGINE INTEGRASI: MODAL & WILAYAH (FIXED VERSION)
+   ENGINE INTEGRASI: MODAL, WILAYAH, & PROSES ALAMAT
    ========================================================================== */
 
-// --- FUNGSI MODAL ---
 function openAddressModal() {
-    document.getElementById('cart-modal').style.display = 'none';
+    const cartModal = document.getElementById('cart-modal');
+    if (cartModal) cartModal.style.display = 'none';
+    
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'block';
@@ -1295,7 +1287,6 @@ function openAddressModal() {
         document.getElementById('pay-step-qris').style.display = 'none';
         document.body.style.overflow = 'hidden';
     }
-    // Muat data jika dropdown masih kosong
     if (document.getElementById('checkout-provinsi').options.length <= 1) {
         loadDaftarProvinsi();
     }
@@ -1306,7 +1297,31 @@ function closeHyvaPayModal() {
     document.body.style.overflow = 'auto';
 }
 
-// --- ENGINE WILAYAH (DENGAN PROTEKSI) ---
+// FUNGSI PENYELAMAT: Menyimpan Data Alamat
+function saveShippingAddress() {
+    const nama = document.getElementById('checkout-nama')?.value.trim();
+    const telepon = document.getElementById('checkout-telepon')?.value.trim();
+    const provSelect = document.getElementById('checkout-provinsi');
+    const kotaSelect = document.getElementById('checkout-kota');
+    const kecSelect = document.getElementById('checkout-kecamatan');
+    const detailAlamat = document.getElementById('checkout-detail-alamat')?.value.trim();
+
+    if (!nama || !telepon || !detailAlamat || !provSelect.value || !kotaSelect.value || !kecSelect.value) {
+        showHyvaToast("Gagal: Mohon lengkapi seluruh data alamat!", "fas fa-exclamation-triangle");
+        return;
+    }
+
+    const alamatLengkap = `${nama} (${telepon})\n${detailAlamat}, Kec. ${kecSelect.options[kecSelect.selectedIndex].text}, ${kotaSelect.options[kotaSelect.selectedIndex].text}, ${provSelect.options[provSelect.selectedIndex].text}`;
+    localStorage.setItem('userAddress', alamatLengkap);
+
+    showHyvaToast("Alamat berhasil disimpan! 📍", "fas fa-check-circle");
+    
+    // Pindah ke step QRIS
+    document.getElementById('pay-step-address').style.display = 'none';
+    document.getElementById('pay-step-qris').style.display = 'block';
+}
+
+// --- ENGINE WILAYAH ---
 async function loadDaftarProvinsi() {
     const provSelect = document.getElementById('checkout-provinsi');
     try {
@@ -1341,16 +1356,12 @@ async function loadDaftarKecamatan(code) {
     } catch (e) { kecSelect.innerHTML = '<option value="">Gagal muat</option>'; }
 }
 
-// --- INISIALISASI EVENT LISTENER ---
+// --- INISIALISASI ---
 document.addEventListener("DOMContentLoaded", () => {
-    const prov = document.getElementById('checkout-provinsi');
-    const kota = document.getElementById('checkout-kota');
-
-    prov?.addEventListener('change', (e) => {
+    document.getElementById('checkout-provinsi')?.addEventListener('change', (e) => {
         if(e.target.value) loadDaftarKota(e.target.value);
     });
-
-    kota?.addEventListener('change', (e) => {
+    document.getElementById('checkout-kota')?.addEventListener('change', (e) => {
         if(e.target.value) loadDaftarKecamatan(e.target.value);
     });
 });
