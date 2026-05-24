@@ -1282,9 +1282,10 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
 }
 
 /* ==========================================================================
-   PERBAIKAN FINAL INTEGRASI MODAL ALAMAT & QRIS (ANTI-GAGAL)
+   INTEGRASI FINAL: MODAL ALAMAT, QRIS, & ENGINE WILAYAH
    ========================================================================== */
 
+// --- FUNGSI MODAL ---
 function openAddressModal() {
     const cartModal = document.getElementById('cart-modal');
     if (cartModal) cartModal.style.display = 'none';
@@ -1292,17 +1293,16 @@ function openAddressModal() {
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'block';
-        
         const stepAddress = document.getElementById('pay-step-address');
         const stepQris = document.getElementById('pay-step-qris');
         if (stepAddress) stepAddress.style.display = 'block';
         if (stepQris) stepQris.style.display = 'none';
-        
-        document.body.style.overflow = 'hidden'; 
+        document.body.style.overflow = 'hidden';
     }
 
-    // Picu pemuatan provinsi segar saat modal dibuka
-    if (typeof loadDaftarProvinsi === 'function') {
+    // Panggil data jika dropdown masih kosong
+    const provSelect = document.getElementById('checkout-provinsi');
+    if (provSelect && provSelect.options.length <= 1) {
         loadDaftarProvinsi();
     }
 }
@@ -1314,171 +1314,89 @@ function closeHyvaPayModal() {
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'none';
-        document.body.style.overflow = 'auto'; 
+        document.body.style.overflow = 'auto';
     }
 }
 
-/* ==========================================================================
-   FUNGSI PENYELAMAT: SAVE SHIPPING ADDRESS (PROSES DATA MENUJU PEMBAYARAN)
-   ========================================================================== */
+// --- FUNGSI SIMPAN ALAMAT ---
 function saveShippingAddress() {
     const nama = document.getElementById('checkout-nama')?.value.trim();
     const telepon = document.getElementById('checkout-telepon')?.value.trim();
-    
     const provSelect = document.getElementById('checkout-provinsi');
     const kotaSelect = document.getElementById('checkout-kota');
     const kecSelect = document.getElementById('checkout-kecamatan');
-    
-    const provText = provSelect ? provSelect.options[provSelect.selectedIndex]?.text : "";
-    const kotaText = kotaSelect ? kotaSelect.options[kotaSelect.selectedIndex]?.text : "";
-    const kecText = kecSelect ? kecSelect.options[kecSelect.selectedIndex]?.text : "";
-    
     const detailAlamat = document.getElementById('checkout-detail-alamat')?.value.trim();
 
-    if (!nama || !telepon || !detailAlamat || !provSelect.value || !kotaSelect.value || !kecSelect.value) {
-        showHyvaToast("Gagal: Mohon lengkapi seluruh data alamat pengiriman! ⚠️", "fas fa-exclamation-triangle");
+    if (!nama || !telepon || !detailAlamat || !provSelect?.value || !kotaSelect?.value || !kecSelect?.value) {
+        if (typeof showHyvaToast === 'function') {
+            showHyvaToast("Mohon lengkapi seluruh data alamat! ⚠️", "fas fa-exclamation-triangle");
+        }
         return;
     }
 
-    const alamatLengkap = `${nama} (${telepon})\n${detailAlamat}, Kec. ${kecText}, ${kotaText}, ${provText}`;
+    const alamatLengkap = `${nama} (${telepon})\n${detailAlamat}, Kec. ${kecSelect.options[kecSelect.selectedIndex].text}, ${kotaSelect.options[kotaSelect.selectedIndex].text}, ${provSelect.options[provSelect.selectedIndex].text}`;
     localStorage.setItem('userAddress', alamatLengkap);
 
-    showHyvaToast("Alamat pengiriman berhasil disimpan! 📍", "fas fa-check-circle");
-    
-    const stepAddress = document.getElementById('pay-step-address');
-    const stepQris = document.getElementById('pay-step-qris');
-    if (stepAddress && stepQris) {
-        stepAddress.style.display = 'none';
-        stepQris.style.display = 'block';
+    if (typeof showHyvaToast === 'function') {
+        showHyvaToast("Alamat berhasil disimpan! 📍", "fas fa-check-circle");
     }
+    
+    document.getElementById('pay-step-address').style.display = 'none';
+    document.getElementById('pay-step-qris').style.display = 'block';
     
     if (typeof updateCartUI === 'function') updateCartUI();
 }
 
-/* ==========================================================================
-   12. ENGINE DATA WILAYAH INDONESIA (AUTOMATIC DROPDOWN EFFECT VIA WILAYAH.ID)
-   ========================================================================== */
-
+// --- ENGINE WILAYAH ---
 async function loadDaftarProvinsi() {
     const provSelect = document.getElementById('checkout-provinsi');
     if (!provSelect) return;
-
     try {
         const res = await fetch('https://wilayah.id/api/provinces.json');
         const result = await res.json();
-        
-        if (result && result.data) {
-            provSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
-            result.data.forEach(prov => {
-                provSelect.innerHTML += `<option value="${prov.code}">${prov.name}</option>`;
-            });
-            console.log("Dropdown Provinsi: Berhasil dimuat via Wilayah.id");
-        }
-    } catch (err) {
-        console.error("Gagal memuat API Provinsi:", err);
-    }
+        provSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
+        result.data.forEach(p => provSelect.innerHTML += `<option value="${p.code}">${p.name}</option>`);
+    } catch (e) { console.error("Error Provinsi:", e); }
 }
 
-async function loadDaftarKota(codeProvinsi) {
+async function loadDaftarKota(code) {
     const kotaSelect = document.getElementById('checkout-kota');
     const kecSelect = document.getElementById('checkout-kecamatan');
-    if (!kotaSelect) return;
-
-    kotaSelect.disabled = false;
-    kotaSelect.innerHTML = '<option value="">Memuat Kota...</option>';
-    if (kecSelect) { kecSelect.disabled = true; kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>'; }
-
+    kotaSelect.innerHTML = '<option value="">Memuat...</option>';
     try {
-        const res = await fetch(`https://wilayah.id/api/regencies/${codeProvinsi}.json`);
+        const res = await fetch(`https://wilayah.id/api/regencies/${code}.json`);
         const result = await res.json();
-        
-        if (result && result.data) {
-            kotaSelect.innerHTML = '<option value="">Pilih Kota / Kabupaten</option>';
-            result.data.forEach(kota => {
-                kotaSelect.innerHTML += `<option value="${kota.code}">${kota.name}</option>`;
-            });
-        }
-    } catch (err) {
-        console.error("Gagal memuat API Kota:", err);
-        kotaSelect.innerHTML = '<option value="">Gagal memuat data</option>';
-    }
+        kotaSelect.innerHTML = '<option value="">Pilih Kota / Kabupaten</option>';
+        result.data.forEach(k => kotaSelect.innerHTML += `<option value="${k.code}">${k.name}</option>`);
+        kotaSelect.disabled = false;
+    } catch (e) { kotaSelect.innerHTML = '<option value="">Gagal muat</option>'; }
 }
 
-async function loadDaftarKecamatan(codeKota) {
+async function loadDaftarKecamatan(code) {
     const kecSelect = document.getElementById('checkout-kecamatan');
-    if (!kecSelect) return;
-
-    kecSelect.disabled = false;
-    kecSelect.innerHTML = '<option value="">Memuat Kecamatan...</option>';
-
+    kecSelect.innerHTML = '<option value="">Memuat...</option>';
     try {
-        const res = await fetch(`https://wilayah.id/api/districts/${codeKota}.json`);
+        const res = await fetch(`https://wilayah.id/api/districts/${code}.json`);
         const result = await res.json();
-        
-        if (result && result.data) {
-            kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
-            result.data.forEach(kec => {
-                kecSelect.innerHTML += `<option value="${kec.code}">${kec.name}</option>`;
-            });
-        }
-    } catch (err) {
-        console.error("Gagal memuat API Kecamatan:", err);
-        kecSelect.innerHTML = '<option value="">Gagal memuat data</option>';
-    }
+        kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+        result.data.forEach(d => kecSelect.innerHTML += `<option value="${d.code}">${d.name}</option>`);
+        kecSelect.disabled = false;
+    } catch (e) { kecSelect.innerHTML = '<option value="">Gagal muat</option>'; }
 }
 
-/* ==========================================================================
-   PERBAIKAN ENGINE DROPDOWN (PASTI JALAN)
-   ========================================================================== */
-function initWilayahDropdownEngine() {
-    const provSelect = document.getElementById('checkout-provinsi');
-    const kotaSelect = document.getElementById('checkout-kota');
-    const kecSelect = document.getElementById('checkout-kecamatan');
+// --- INISIALISASI ---
+document.addEventListener("DOMContentLoaded", () => {
+    const prov = document.getElementById('checkout-provinsi');
+    const kota = document.getElementById('checkout-kota');
+    const kec = document.getElementById('checkout-kecamatan');
 
-    // 1. Panggil data provinsi SEGERA saat halaman dimuat
-    if (provSelect) {
-        loadDaftarProvinsi(); 
-        
-        provSelect.addEventListener('change', function () {
-            const codeProvinsi = this.value;
-            if (codeProvinsi) {
-                loadDaftarKota(codeProvinsi);
-            } else {
-                if (kotaSelect) { kotaSelect.disabled = true; kotaSelect.innerHTML = '<option value="">Pilih Kota / Kabupaten</option>'; }
-                if (kecSelect) { kecSelect.disabled = true; kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>'; }
-            }
-        });
-    }
-
-    if (kotaSelect) {
-        kotaSelect.addEventListener('change', function () {
-            const codeKota = this.value;
-            if (codeKota) {
-                loadDaftarKecamatan(codeKota);
-            } else {
-                if (kecSelect) { kecSelect.disabled = true; kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>'; }
-            }
-        });
-    }
-}
-
-// Inisialisasi otomatis saat dokumen siap
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initWilayahDropdownEngine);
-} else {
-    initWilayahDropdownEngine();
-}
-
-function loadProvinsi() {
     loadDaftarProvinsi();
-}
-// Contoh fungsi untuk mengambil data kota berdasarkan ID Provinsi
-async function getKota(provinsiId) {
-    try {
-        const response = await fetch(`https://wilayah.id/api/regencies/${provinsiId}.json`);
-        const result = await response.json();
-        return result.data; // Data kota akan kembali ke sini
-    } catch (error) {
-        console.error("Gagal mengambil data kota:", error);
-    }
-}
+
+    prov?.addEventListener('change', (e) => {
+        if(e.target.value) loadDaftarKota(e.target.value);
+    });
+
+    kota?.addEventListener('change', (e) => {
+        if(e.target.value) loadDaftarKecamatan(e.target.value);
+    });
+});
