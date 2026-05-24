@@ -347,28 +347,25 @@
                     <input type="tel" id="checkout-telepon" placeholder="No. WhatsApp Aktif" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" required>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#333;">Provinsi</label>
-                    <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
-                        <input type="text" id="checkout-provinsi" list="list-provinsi" placeholder="Pilih Provinsi" autocomplete="off" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;">
-                        <datalist id="list-provinsi"></datalist>
-                    </div>
+                <div class="hyva-form-group" style="margin-bottom: 15px;">
+                    <label for="checkout-provinsi" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-map"></i> Provinsi</label>
+                    <select id="checkout-provinsi" class="hyva-input-style" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none;">
+                        <option value="">Pilih Provinsi</option>
+                    </select>
                 </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#333;">Kota / Kabupaten</label>
-                    <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
-                        <input type="text" id="checkout-kota" list="list-kota" placeholder="Pilih Kota/Kabupaten" disabled autocomplete="off" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;">
-                        <datalist id="list-kota"></datalist>
-                    </div>
+                
+                <div class="hyva-form-group" style="margin-bottom: 15px;">
+                    <label for="checkout-kota" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-city"></i> Kota / Kabupaten</label>
+                    <select id="checkout-kota" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none;">
+                        <option value="">Pilih Kota / Kabupaten</option>
+                    </select>
                 </div>
-
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label style="display:block; font-size:12px; font-weight:600; margin-bottom:5px; color:#333;">Kecamatan</label>
-                    <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
-                        <input type="text" id="checkout-kecamatan" list="list-kecamatan" placeholder="Pilih Kecamatan" disabled autocomplete="off" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;">
-                        <datalist id="list-kecamatan"></datalist>
-                    </div>
+                
+                <div class="hyva-form-group" style="margin-bottom: 15px;">
+                    <label for="checkout-kecamatan" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-home"></i> Kecamatan</label>
+                    <select id="checkout-kecamatan" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none;">
+                        <option value="">Pilih Kecamatan</option>
+                    </select>
                 </div>
 
                 <div class="hyva-input-group" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: flex-start; gap: 10px; background: #fafafa;">
@@ -380,6 +377,9 @@
                     SIMPAN ALAMAT & LANJUT
                 </button>
             </div>
+        </div>
+    </div>
+</div>
 
             <div id="pay-step-qris" style="display: none;">
                 <p class="pay-instruction" style="text-align: center; font-size: 14px; color: #555;">Silakan scan kode QRIS di bawah ini untuk menyelesaikan pesanan Anda</p>
