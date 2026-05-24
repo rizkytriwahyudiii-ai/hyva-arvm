@@ -1263,10 +1263,10 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
     const toast = document.createElement('div');
     toast.className = 'hyva-toast';
     toast.innerHTML = `
-        <div class=\"hyva-toast-icon-wrapper\">
-            <i class=\"${iconClass}\"></i>
+        <div class="hyva-toast-icon-wrapper">
+            <i class="${iconClass}"></i>
         </div>
-        <div class=\"hyva-toast-text\">${formattedMessage}</div>
+        <div class="hyva-toast-text">${formattedMessage}</div>
     `;
     
     container.appendChild(toast);
@@ -1281,10 +1281,9 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
     }, 4000);
 }
 
-
-// ==========================================================================
-// PASTE / TARUH KODE BARU KAKAK DI SINI (BAGIAN PALING BAWAH FILE)
-// ==========================================================================
+/* ==========================================================================
+   PERBAIKAN FITUR POP-UP UBAH ALAMAT & INTEGRASI QRIS MODAL
+   ========================================================================== */
 
 function openAddressModal() {
     // 1. Tutup keranjang belanja terlebih dahulu secara otomatis
@@ -1312,6 +1311,11 @@ function openAddressModal() {
             loadProvinsi();
         }
     }
+}
+
+// ALIAS JALAN PINTAS: Menghubungkan fungsi klik bawaan sistem lama Kakak ke fungsi pop-up baru
+function openShippingAddressModal() {
+    openAddressModal();
 }
 
 function closeHyvaPayModal() {
