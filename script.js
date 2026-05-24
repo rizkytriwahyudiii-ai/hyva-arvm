@@ -211,29 +211,35 @@ function removeFromCart(index) {
 
 function toggleCart() {
     const cartModal = document.getElementById('cart-modal');
-    // Sesuaikan selector di bawah ini dengan id/class tombol chat admin Kakak (misal: #ai-chat-widget, .chat-admin, dll)
-    const chatWidget = document.getElementById('ai-chat-container') || document.querySelector('.ai-chat-toggle');
+    // PERBAIKAN: Menggunakan ID yang tepat sesuai engine database script.js Kakak (#ai-chat-widget)
+    const chatWidget = document.getElementById('ai-chat-widget');
 
     if (!cartModal) return;
 
-    // Jika cart sedang tertutup, maka kita buka
-    if (cartModal.style.display === 'none' || cartModal.style.display === '') {
-        cartModal.style.display = 'block';
+    if (cartModal.style.display === "block") {
+        // --- PROSES MENUTUP CART ---
+        cartModal.style.display = "none";
+        document.body.style.overflow = 'auto'; // Mengembalikan scroll halaman
         
-        // Sembunyikan chat admin saat keranjang terbuka
+        // Munculkan kembali tombol chat admin secara halus
         if (chatWidget) {
-            chatWidget.style.opacity = '0';
-            chatWidget.style.pointerEvents = 'none';
+            chatWidget.style.opacity = '1';
+            chatWidget.style.visibility = 'visible';
+            chatWidget.style.pointerEvents = 'auto';
             chatWidget.style.transition = 'all 0.3s ease';
         }
     } else {
-        // Jika cart sedang terbuka, maka kita tutup
-        cartModal.style.display = 'none';
+        // --- PROSES MEMBUKA CART ---
+        cartModal.style.display = "block";
+        updateCartUI(); // PENTING: Menampilkan data produk di keranjang belanja
+        document.body.style.overflow = 'hidden'; // Mengunci scroll latar belakang
         
-        // Munculkan kembali chat admin saat keranjang ditutup
+        // Sembunyikan total tombol chat admin secara mutlak
         if (chatWidget) {
-            chatWidget.style.opacity = '1';
-            chatWidget.style.pointerEvents = 'auto';
+            chatWidget.style.opacity = '0';
+            chatWidget.style.visibility = 'hidden';
+            chatWidget.style.pointerEvents = 'none';
+            chatWidget.style.transition = 'all 0.3s ease';
         }
     }
 }
