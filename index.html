@@ -349,21 +349,18 @@
 
                 <div class="address-grid-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
-                        <select id="checkout-provinsi" onchange="handleProvinsiChange()" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; cursor: pointer;">
-                            <option value="">Pilih Provinsi</option>
-                        </select>
+                        <input type="text" id="checkout-provinsi" list="list-provinsi" placeholder="Pilih atau ketik Provinsi..." style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;">
+                        <datalist id="list-provinsi"></datalist>
                     </div>
                     <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
-                        <select id="checkout-kota" onchange="handleKotaChange()" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; cursor: pointer;" disabled>
-                            <option value="">Pilih Kota/Kabupaten</option>
-                        </select>
+                        <input type="text" id="checkout-kota" list="list-kota" placeholder="Pilih atau ketik Kota/Kabupaten..." style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" disabled>
+                        <datalist id="list-kota"></datalist>
                     </div>
                 </div>
 
                 <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin-bottom: 15px; background: #fafafa;">
-                    <select id="checkout-kecamatan" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; cursor: pointer;" disabled>
-                        <option value="">Pilih Kecamatan</option>
-                    </select>
+                    <input type="text" id="checkout-kecamatan" list="list-kecamatan" placeholder="Pilih atau ketik Kecamatan..." style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" disabled>
+                    <datalist id="list-kecamatan"></datalist>
                 </div>
 
                 <div class="hyva-input-group" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: flex-start; gap: 10px; background: #fafafa;">
