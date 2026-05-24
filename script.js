@@ -245,13 +245,17 @@ function checkoutOtomatis() {
         return;
     }
 
-    const totalText = document.getElementById('total-price').innerText;
+    // Ambil element total harga
+    const totalPriceEl = document.getElementById('total-price');
+    if (!totalPriceEl) return;
+
+    const totalText = totalPriceEl.innerText;
     const cleanTotal = totalText.replace(/[^0-9]/g, '');
 
-    // 1. Tutup keranjang belanja dulu
+    // 1. Tutup keranjang belanja secara halus
     toggleCart();
 
-    // 2. Tampilkan pop-up QRIS / Bank Transfer
+    // 2. Buka form pengiriman alamat terlebih dahulu sebelum QRIS
     openHyvaPayModal(cleanTotal);
 }
 
