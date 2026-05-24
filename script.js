@@ -1282,75 +1282,33 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
 }
 
 /* ==========================================================================
-   INTEGRASI FINAL: MODAL ALAMAT, QRIS, & ENGINE WILAYAH
+   ENGINE INTEGRASI: MODAL & WILAYAH (FIXED VERSION)
    ========================================================================== */
 
 // --- FUNGSI MODAL ---
 function openAddressModal() {
-    const cartModal = document.getElementById('cart-modal');
-    if (cartModal) cartModal.style.display = 'none';
-
+    document.getElementById('cart-modal').style.display = 'none';
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'block';
-        const stepAddress = document.getElementById('pay-step-address');
-        const stepQris = document.getElementById('pay-step-qris');
-        if (stepAddress) stepAddress.style.display = 'block';
-        if (stepQris) stepQris.style.display = 'none';
+        document.getElementById('pay-step-address').style.display = 'block';
+        document.getElementById('pay-step-qris').style.display = 'none';
         document.body.style.overflow = 'hidden';
     }
-
-    // Panggil data jika dropdown masih kosong
-    const provSelect = document.getElementById('checkout-provinsi');
-    if (provSelect && provSelect.options.length <= 1) {
+    // Muat data jika dropdown masih kosong
+    if (document.getElementById('checkout-provinsi').options.length <= 1) {
         loadDaftarProvinsi();
     }
 }
 
-function openShippingAddressModal() { openAddressModal(); }
-function openPayModal() { openAddressModal(); }
-
 function closeHyvaPayModal() {
-    const paymentModal = document.getElementById('hyva-payment-modal');
-    if (paymentModal) {
-        paymentModal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
+    document.getElementById('hyva-payment-modal').style.display = 'none';
+    document.body.style.overflow = 'auto';
 }
 
-// --- FUNGSI SIMPAN ALAMAT ---
-function saveShippingAddress() {
-    const nama = document.getElementById('checkout-nama')?.value.trim();
-    const telepon = document.getElementById('checkout-telepon')?.value.trim();
-    const provSelect = document.getElementById('checkout-provinsi');
-    const kotaSelect = document.getElementById('checkout-kota');
-    const kecSelect = document.getElementById('checkout-kecamatan');
-    const detailAlamat = document.getElementById('checkout-detail-alamat')?.value.trim();
-
-    if (!nama || !telepon || !detailAlamat || !provSelect?.value || !kotaSelect?.value || !kecSelect?.value) {
-        if (typeof showHyvaToast === 'function') {
-            showHyvaToast("Mohon lengkapi seluruh data alamat! ⚠️", "fas fa-exclamation-triangle");
-        }
-        return;
-    }
-
-    const alamatLengkap = `${nama} (${telepon})\n${detailAlamat}, Kec. ${kecSelect.options[kecSelect.selectedIndex].text}, ${kotaSelect.options[kotaSelect.selectedIndex].text}, ${provSelect.options[provSelect.selectedIndex].text}`;
-    localStorage.setItem('userAddress', alamatLengkap);
-
-    if (typeof showHyvaToast === 'function') {
-        showHyvaToast("Alamat berhasil disimpan! 📍", "fas fa-check-circle");
-    }
-    
-    document.getElementById('pay-step-address').style.display = 'none';
-    document.getElementById('pay-step-qris').style.display = 'block';
-    
-    if (typeof updateCartUI === 'function') updateCartUI();
-}
-
-// --- ENGINE WILAYAH ---
+// --- ENGINE WILAYAH (DENGAN PROTEKSI) ---
 async function loadDaftarProvinsi() {
     const provSelect = document.getElementById('checkout-provinsi');
-    if (!provSelect) return;
     try {
         const res = await fetch('https://wilayah.id/api/provinces.json');
         const result = await res.json();
@@ -1361,7 +1319,6 @@ async function loadDaftarProvinsi() {
 
 async function loadDaftarKota(code) {
     const kotaSelect = document.getElementById('checkout-kota');
-    const kecSelect = document.getElementById('checkout-kecamatan');
     kotaSelect.innerHTML = '<option value="">Memuat...</option>';
     try {
         const res = await fetch(`https://wilayah.id/api/regencies/${code}.json`);
@@ -1384,13 +1341,10 @@ async function loadDaftarKecamatan(code) {
     } catch (e) { kecSelect.innerHTML = '<option value="">Gagal muat</option>'; }
 }
 
-// --- INISIALISASI ---
+// --- INISIALISASI EVENT LISTENER ---
 document.addEventListener("DOMContentLoaded", () => {
     const prov = document.getElementById('checkout-provinsi');
     const kota = document.getElementById('checkout-kota');
-    const kec = document.getElementById('checkout-kecamatan');
-
-    loadDaftarProvinsi();
 
     prov?.addEventListener('change', (e) => {
         if(e.target.value) loadDaftarKota(e.target.value);
