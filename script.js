@@ -211,52 +211,16 @@ function removeFromCart(index) {
 
 function toggleCart() {
     const cartModal = document.getElementById('cart-modal');
-    const chatWidget = document.querySelector('.whatsapp-float');
-
     if (!cartModal) return;
 
     if (cartModal.style.display === "block") {
         cartModal.style.display = "none";
         document.body.style.overflow = 'auto';
-        
-        if (chatWidget) {
-            chatWidget.style.opacity = '1';
-            chatWidget.style.visibility = 'visible';
-            chatWidget.style.pointerEvents = 'auto';
-            chatWidget.style.transition = 'all 0.3s ease';
-        }
     } else {
         cartModal.style.display = "block";
         updateCartUI(); 
         document.body.style.overflow = 'hidden';
-        
-        if (chatWidget) {
-            chatWidget.style.opacity = '0';
-            chatWidget.style.visibility = 'hidden';
-            chatWidget.style.pointerEvents = 'none';
-            chatWidget.style.transition = 'all 0.3s ease';
-        }
     }
-}
-
-function checkoutOtomatis() {
-    if (cart.length === 0) {
-        showHyvaToast("Keranjang belanja Kakak masih kosong!", "fas fa-exclamation-circle");
-        return;
-    }
-
-    // Ambil element total harga
-    const totalPriceEl = document.getElementById('total-price');
-    if (!totalPriceEl) return;
-
-    const totalText = totalPriceEl.innerText;
-    const cleanTotal = totalText.replace(/[^0-9]/g, '');
-
-    // 1. Tutup keranjang belanja secara halus
-    toggleCart();
-
-    // 2. Buka form pengiriman alamat terlebih dahulu sebelum QRIS
-    openHyvaPayModal(cleanTotal);
 }
 
 /* ==========================================================================
