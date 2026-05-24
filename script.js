@@ -1286,43 +1286,35 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
    ========================================================================== */
 
 function openAddressModal() {
-    // Tutup keranjang belanja terlebih dahulu secara otomatis
     const cartModal = document.getElementById('cart-modal');
     if (cartModal) cartModal.style.display = 'none';
 
-    // Tampilkan modal pengiriman/pembayaran utama
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'block';
         
-        // Paksa tampilan pop-up agar memunculkan Step 1 (Formulir Isi Alamat)
         const stepAddress = document.getElementById('pay-step-address');
         const stepQris = document.getElementById('pay-step-qris');
         if (stepAddress) stepAddress.style.display = 'block';
         if (stepQris) stepQris.style.display = 'none';
         
-        document.body.style.overflow = 'hidden'; // Kunci scroll layar utama
+        document.body.style.overflow = 'hidden'; 
     }
 
-    // Jalankan pemuatan provinsi segar setiap kali modal dibuka
+    // Picu pemuatan provinsi segar saat modal dibuka
     if (typeof loadDaftarProvinsi === 'function') {
         loadDaftarProvinsi();
     }
 }
 
-// JALAN PINTAS (ALIAS): Menghubungkan fungsi klik bawaan sistem keranjang Kakak
-function openShippingAddressModal() {
-    openAddressModal();
-}
-function openPayModal() {
-    openAddressModal();
-}
+function openShippingAddressModal() { openAddressModal(); }
+function openPayModal() { openAddressModal(); }
 
 function closeHyvaPayModal() {
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
         paymentModal.style.display = 'none';
-        document.body.style.overflow = 'auto'; // Mengembalikan scroll layar utama
+        document.body.style.overflow = 'auto'; 
     }
 }
 
@@ -1333,7 +1325,6 @@ function saveShippingAddress() {
     const nama = document.getElementById('checkout-nama')?.value.trim();
     const telepon = document.getElementById('checkout-telepon')?.value.trim();
     
-    // Ambil nama teks dari dropdown yang sedang dipilih (bukan kodenya)
     const provSelect = document.getElementById('checkout-provinsi');
     const kotaSelect = document.getElementById('checkout-kota');
     const kecSelect = document.getElementById('checkout-kecamatan');
@@ -1344,19 +1335,16 @@ function saveShippingAddress() {
     
     const detailAlamat = document.getElementById('checkout-detail-alamat')?.value.trim();
 
-    if (!nama || !telepon || !detailAlamat || provSelect.value === "" || kotaSelect.value === "" || kecSelect.value === "") {
+    if (!nama || !telepon || !detailAlamat || !provSelect.value || !kotaSelect.value || !kecSelect.value) {
         showHyvaToast("Gagal: Mohon lengkapi seluruh data alamat pengiriman! ⚠️", "fas fa-exclamation-triangle");
         return;
     }
 
     const alamatLengkap = `${nama} (${telepon})\n${detailAlamat}, Kec. ${kecText}, ${kotaText}, ${provText}`;
-    
-    // Simpan ke localStorage agar sinkron dengan sistem web kamu
     localStorage.setItem('userAddress', alamatLengkap);
 
     showHyvaToast("Alamat pengiriman berhasil disimpan! 📍", "fas fa-check-circle");
     
-    // Alihkan tampilan ke step QRIS Pembayaran di dalam modal yang sama
     const stepAddress = document.getElementById('pay-step-address');
     const stepQris = document.getElementById('pay-step-qris');
     if (stepAddress && stepQris) {
@@ -1371,7 +1359,6 @@ function saveShippingAddress() {
    12. ENGINE DATA WILAYAH INDONESIA (AUTOMATIC DROPDOWN EFFECT VIA WILAYAH.ID)
    ========================================================================== */
 
-// 1. Fungsi Mengambil Data Provinsi dari API Wilayah.id
 async function loadDaftarProvinsi() {
     const provSelect = document.getElementById('checkout-provinsi');
     if (!provSelect) return;
@@ -1383,7 +1370,6 @@ async function loadDaftarProvinsi() {
         if (result && result.data) {
             provSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
             result.data.forEach(prov => {
-                // value menyimpan CODE wilayah untuk query anak, teks menampilkan NAMA provinsi
                 provSelect.innerHTML += `<option value="${prov.code}">${prov.name}</option>`;
             });
             console.log("Dropdown Provinsi: Berhasil dimuat via Wilayah.id");
@@ -1393,7 +1379,6 @@ async function loadDaftarProvinsi() {
     }
 }
 
-// 2. Fungsi Mengambil Data Kota Berdasarkan Kode Provinsi
 async function loadDaftarKota(codeProvinsi) {
     const kotaSelect = document.getElementById('checkout-kota');
     const kecSelect = document.getElementById('checkout-kecamatan');
@@ -1419,7 +1404,6 @@ async function loadDaftarKota(codeProvinsi) {
     }
 }
 
-// 3. Fungsi Mengambil Data Kecamatan Berdasarkan Kode Kota
 async function loadDaftarKecamatan(codeKota) {
     const kecSelect = document.getElementById('checkout-kecamatan');
     if (!kecSelect) return;
@@ -1443,7 +1427,6 @@ async function loadDaftarKecamatan(codeKota) {
     }
 }
 
-// 4. Inisialisasi Pemasangan Event Listener Dropdown Alamat
 function initWilayahDropdownEngine() {
     const provSelect = document.getElementById('checkout-provinsi');
     const kotaSelect = document.getElementById('checkout-kota');
@@ -1451,7 +1434,7 @@ function initWilayahDropdownEngine() {
 
     if (provSelect) {
         provSelect.addEventListener('change', function () {
-            const codeProvinsi = this.value; // Mengambil value berupa kode angka (ex: 36)
+            const codeProvinsi = this.value;
             if (codeProvinsi) {
                 loadDaftarKota(codeProvinsi);
             } else {
@@ -1463,7 +1446,7 @@ function initWilayahDropdownEngine() {
 
     if (kotaSelect) {
         kotaSelect.addEventListener('change', function () {
-            const codeKota = this.value; // Mengambil value berupa kode angka (ex: 31.74)
+            const codeKota = this.value;
             if (codeKota) {
                 loadDaftarKecamatan(codeKota);
             } else {
@@ -1473,14 +1456,12 @@ function initWilayahDropdownEngine() {
     }
 }
 
-// Jalankan Engine Pemasang Event Listener agar siap siaga di latar belakang
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initWilayahDropdownEngine);
 } else {
     initWilayahDropdownEngine();
 }
 
-// 5. JEMBATAN ALIAS: Menghubungkan fungsi tombol bawaan jika ada script tengah yang memanggil nama ini
 function loadProvinsi() {
     loadDaftarProvinsi();
 }
