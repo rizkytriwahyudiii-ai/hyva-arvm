@@ -1330,148 +1330,125 @@ function closeHyvaPayModal() {
 }
 
 /* ==========================================================================
-   5. ENGINE DATABASE WILAYAH INDONESIA REAL-TIME (SECURE HTTPS API)
+   12. ENGINE DATA WILAYAH INDONESIA (AUTOMATIC DROPDOWN EFFECT)
    ========================================================================== */
 
-// Penyimpan State ID internal untuk query berjenjang
-let selectedProvinsiId = "";
-let selectedKotaId = "";
+// Ambil data Provinsi secara otomatis saat halaman web dimuat
+document.addEventListener("DOMContentLoaded", function () {
+    loadDaftarProvinsi();
 
-// 1. MEMUAT DATA PROVINSI SAAT MODAL DIBUKA
-async function loadProvinsi() {
-    const inputProvinsi = document.getElementById('checkout-provinsi');
-    const inputKota = document.getElementById('checkout-kota');
-    const inputKecamatan = document.getElementById('checkout-kecamatan');
-    
-    const datalistProvinsi = document.getElementById('list-provinsi');
-    const datalistKota = document.getElementById('list-kota');
-    const datalistKecamatan = document.getElementById('list-kecamatan');
-    
-    // Reset kondisi awal form & kunci turunan
-    if (datalistProvinsi) datalistProvinsi.innerHTML = "";
-    if (datalistKota) datalistKota.innerHTML = "";
-    if (datalistKecamatan) datalistKecamatan.innerHTML = "";
-    
-    if (inputProvinsi) { inputProvinsi.value = ""; inputProvinsi.placeholder = "Memuat Provinsi..."; }
-    if (inputKota) { inputKota.value = ""; inputKota.disabled = true; }
-    if (inputKecamatan) { inputKecamatan.value = ""; inputKecamatan.disabled = true; }
+    const provSelect = document.getElementById('checkout-provinsi');
+    const kotaSelect = document.getElementById('checkout-kota');
+    const kecSelect = document.getElementById('checkout-kecamatan');
 
-    try {
-        // Menggunakan API Publik HTTPS Resmi & Stabil dari GHP (Garuda Hacker Protocol)
-        const response = await fetch('https://alamat.ghp.id/provinsi');
-        const result = await response.json();
-        
-        if (result && result.status === "success" && result.data) {
-            window.globalProvincesList = result.data; // Simpan cache di memory
-            
-            result.data.forEach(prov => {
-                let option = document.createElement('option');
-                option.value = prov.nama; // Menyimpan Nama Provinsi (Contoh: JAWA TIMUR)
-                if (datalistProvinsi) datalistProvinsi.appendChild(option);
-            });
-            
-            if (inputProvinsi) inputProvinsi.placeholder = "Pilih Provinsi";
-        }
-    } catch (error) {
-        console.error("Gagal memuat API Provinsi:", error);
-        if (inputProvinsi) inputProvinsi.placeholder = "Gagal memuat. Buka ulang modal.";
-    }
-}
-
-// 2. LOGIKA EVENT LISTENER INPUT SECARA DOM LIVE INTERACTION
-document.addEventListener("DOMContentLoaded", function() {
-    const inputProvinsi = document.getElementById('checkout-provinsi');
-    const inputKota = document.getElementById('checkout-kota');
-    const inputKecamatan = document.getElementById('checkout-kecamatan');
-    
-    const datalistKota = document.getElementById('list-kota');
-    const datalistKecamatan = document.getElementById('list-kecamatan');
-
-    // EVENT LISTENER: KETIKA PROVINSI DIPILIH / DIKETIK
-    if (inputProvinsi) {
-        inputProvinsi.addEventListener('input', async function() {
-            const val = this.value.trim().toUpperCase();
-            if (!window.globalProvincesList) return;
-            
-            // Cari data provinsi yang diketik/dipilih oleh user
-            const foundProv = window.globalProvincesList.find(p => p.nama.toUpperCase() === val);
-            
-            if (foundProv) {
-                selectedProvinsiId = foundProv.id; // Dapatkan ID Provinsi
-                
-                // Siapkan form kota
-                inputKota.disabled = false;
-                inputKota.value = "";
-                inputKota.placeholder = "Memuat Kota/Kabupaten...";
-                if (datalistKota) datalistKota.innerHTML = "";
-                
-                if (inputKecamatan) { inputKecamatan.value = ""; inputKecamatan.disabled = true; }
-                if (datalistKecamatan) datalistKecamatan.innerHTML = "";
-
-                try {
-                    // Ambil daftar kota berdasarkan ID provinsi terpilih
-                    const res = await fetch(`https://alamat.ghp.id/kota?id_provinsi=${selectedProvinsiId}`);
-                    const result = await res.json();
-                    
-                    if (result && result.status === "success" && result.data) {
-                        window.globalKotaList = result.data; // Simpan cache kota
-                        
-                        result.data.forEach(kota => {
-                            let option = document.createElement('option');
-                            option.value = kota.nama; // Contoh: KABUPATEN MOJOKERTO
-                            if (datalistKota) datalistKota.appendChild(option);
-                        });
-                        inputKota.placeholder = "Pilih Kota/Kabupaten";
-                    }
-                } catch (err) {
-                    console.error("Gagal mengambil API Kota:", err);
-                }
+    // Ketika Provinsi dipilih -> Muat data Kota
+    if (provSelect) {
+        provSelect.addEventListener('change', function () {
+            const namaProvinsi = this.value;
+            if (namaProvinsi) {
+                loadDaftarKota(namaProvinsi);
             } else {
-                // Kunci kembali jika inputan dihapus / tidak valid
-                if (inputKota) { inputKota.disabled = true; inputKota.value = ""; }
-                if (inputKecamatan) { inputKecamatan.disabled = true; inputKecamatan.value = ""; }
+                if (kotaSelect) { kotaSelect.disabled = true; kotaSelect.innerHTML = '<option value="">Pilih Kota / Kabupaten</option>'; }
+                if (kecSelect) { kecSelect.disabled = true; kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>'; }
             }
         });
     }
 
-    // EVENT LISTENER: KETIKA KOTA DIPILIH / DIKETIK
-    if (inputKota) {
-        inputKota.addEventListener('input', async function() {
-            const val = this.value.trim().toUpperCase();
-            if (!window.globalKotaList) return;
-            
-            // Cari data kota yang cocok
-            const foundKota = window.globalKotaList.find(k => k.nama.toUpperCase() === val);
-            
-            if (foundKota) {
-                selectedKotaId = foundKota.id; // Dapatkan ID Kota
-                
-                // Siapkan form kecamatan
-                inputKecamatan.disabled = false;
-                inputKecamatan.value = "";
-                inputKecamatan.placeholder = "Memuat Kecamatan...";
-                if (datalistKecamatan) datalistKecamatan.innerHTML = "";
-
-                try {
-                    // Ambil daftar kecamatan berdasarkan ID kota terpilih
-                    const res = await fetch(`https://alamat.ghp.id/kecamatan?id_kota=${selectedKotaId}`);
-                    const result = await res.json();
-                    
-                    if (result && result.status === "success" && result.data) {
-                        result.data.forEach(kec => {
-                            let option = document.createElement('option');
-                            option.value = kec.nama; // Contoh: SOOKO
-                            if (datalistKecamatan) datalistKecamatan.innerHTML = "";
-                            if (datalistKecamatan) datalistKecamatan.appendChild(option);
-                        });
-                        inputKecamatan.placeholder = "Pilih Kecamatan";
-                    }
-                } catch (err) {
-                    console.error("Gagal mengambil API Kecamatan:", err);
-                }
+    // Ketika Kota dipilih -> Muat data Kecamatan
+    if (kotaSelect) {
+        kotaSelect.addEventListener('change', function () {
+            const namaKota = this.value;
+            if (namaKota) {
+                loadDaftarKecamatan(namaKota);
             } else {
-                if (inputKecamatan) { inputKecamatan.disabled = true; inputKecamatan.value = ""; }
+                if (kecSelect) { kecSelect.disabled = true; kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>'; }
             }
         });
     }
 });
+
+// 1. Fungsi Mengambil Data Provinsi dari API
+async function loadDaftarProvinsi() {
+    const provSelect = document.getElementById('checkout-provinsi');
+    if (!provSelect) return;
+
+    try {
+        const res = await fetch('https://alamat.ghp.id/provinsi');
+        const result = await res.json();
+        if (result && result.status === "success" && result.data) {
+            provSelect.innerHTML = '<option value="">Pilih Provinsi</option>';
+            result.data.forEach(prov => {
+                provSelect.innerHTML += `<option value="${prov.nama}">${prov.nama}</option>`;
+            });
+        }
+    } catch (err) {
+        console.error("Gagal memuat API Provinsi:", err);
+    }
+}
+
+// 2. Fungsi Mengambil Data Kota Berdasarkan Provinsi
+async function loadDaftarKota(namaProvinsi) {
+    const kotaSelect = document.getElementById('checkout-kota');
+    const kecSelect = document.getElementById('checkout-kecamatan');
+    if (!kotaSelect) return;
+
+    kotaSelect.disabled = false;
+    kotaSelect.innerHTML = '<option value="">Memuat Kota...</option>';
+    if (kecSelect) { kecSelect.disabled = true; kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>'; }
+
+    try {
+        // Ambil ID Provinsi terlebih dahulu dari endpoint untuk mendapatkan daftar kota
+        const resProv = await fetch('https://alamat.ghp.id/provinsi');
+        const resultProv = await resProv.json();
+        const foundProv = resultProv.data.find(p => p.nama === namaProvinsi);
+
+        if (foundProv) {
+            const resKota = await fetch(`https://alamat.ghp.id/kota?id_provinsi=${foundProv.id}`);
+            const resultKota = await resKota.json();
+            if (resultKota && resultKota.status === "success" && resultKota.data) {
+                kotaSelect.innerHTML = '<option value="">Pilih Kota / Kabupaten</option>';
+                resultKota.data.forEach(kota => {
+                    kotaSelect.innerHTML += `<option value="${kota.nama}" data-id="${kota.id}">${kota.nama}</option>`;
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Gagal memuat API Kota:", err);
+        kotaSelect.innerHTML = '<option value="">Gagal memuat data</option>';
+    }
+}
+
+// 3. Fungsi Mengambil Data Kecamatan Berdasarkan Kota
+async function loadDaftarKecamatan(namaKota) {
+    const kotaSelect = document.getElementById('checkout-kota');
+    const kecSelect = document.getElementById('checkout-kecamatan');
+    if (!kecSelect || !kotaSelect) return;
+
+    kecSelect.disabled = false;
+    kecSelect.innerHTML = '<option value="">Memuat Kecamatan...</option>';
+
+    try {
+        // Ambil ID Kota dari option yang sedang aktif terpilih
+        const selectedOption = kotaSelect.options[kotaSelect.selectedIndex];
+        const selectedKotaId = selectedOption.getAttribute('data-id');
+
+        if (selectedKotaId) {
+            const resKec = await fetch(`https://alamat.ghp.id/kecamatan?id_kota=${selectedKotaId}`);
+            const resultKec = await resKec.json();
+            if (resultKec && resultKec.status === "success" && resultKec.data) {
+                kecSelect.innerHTML = '<option value="">Pilih Kecamatan</option>';
+                resultKec.data.forEach(kec => {
+                    kecSelect.innerHTML += `<option value="${kec.nama}">${kec.nama}</option>`;
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Gagal memuat API Kecamatan:", err);
+        kecSelect.innerHTML = '<option value="">Gagal memuat data</option>';
+    }
+}
+
+// 4. JEMBATAN ALIAS: Meneruskan perintah pembukaan modal lama ke sistem dropdown otomatis yang baru
+function loadProvinsi() {
+    loadDaftarProvinsi();
+}
