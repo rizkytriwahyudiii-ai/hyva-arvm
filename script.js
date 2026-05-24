@@ -1323,11 +1323,34 @@ function saveShippingAddress() {
 
 // --- INISIALISASI ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Listener wilayah yang memanggil fungsi dari file wilayah-api.js
-    document.getElementById('checkout-provinsi')?.addEventListener('change', (e) => {
-        if(e.target.value && typeof loadDaftarKota === 'function') loadDaftarKota(e.target.value);
+
+    // Load provinsi pertama kali
+    loadDaftarProvinsi();
+
+    // Saat provinsi dipilih
+    document.getElementById("checkout-provinsi")
+    .addEventListener("change", async function () {
+
+        const provCode = this.value;
+
+        // reset kecamatan
+        document.getElementById("checkout-kecamatan").innerHTML =
+            '<option value="">Pilih Kecamatan</option>';
+
+        if (provCode) {
+            await loadDaftarKota(provCode);
+        }
     });
-    document.getElementById('checkout-kota')?.addEventListener('change', (e) => {
-        if(e.target.value && typeof loadDaftarKecamatan === 'function') loadDaftarKecamatan(e.target.value);
+
+    // Saat kota dipilih
+    document.getElementById("checkout-kota")
+    .addEventListener("change", async function () {
+
+        const kotaCode = this.value;
+
+        if (kotaCode) {
+            await loadDaftarKecamatan(kotaCode);
+        }
     });
+
 });
