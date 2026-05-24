@@ -1285,7 +1285,6 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
    PERBAIKAN FINAL INTEGRASI MODAL ALAMAT & QRIS (ANTI-GAGAL)
    ========================================================================== */
 
-// 1. Fungsi Utama Pembuka Modal Alamat & Pembayaran
 function openAddressModal() {
     // Tutup keranjang belanja terlebih dahulu secara otomatis
     const cartModal = document.getElementById('cart-modal');
@@ -1314,7 +1313,7 @@ function openAddressModal() {
     }
 }
 
-// 2. JALAN PINTAS (ALIAS): Menangkap semua trigger tombol dari system script Kakak yang lama
+// JALAN PINTAS (ALIAS): Menghubungkan fungsi klik bawaan sistem keranjang Kakak
 function openShippingAddressModal() {
     openAddressModal();
 }
@@ -1322,7 +1321,6 @@ function openPayModal() {
     openAddressModal();
 }
 
-// 3. Fungsi Penutup Modal Utama
 function closeHyvaPayModal() {
     const paymentModal = document.getElementById('hyva-payment-modal');
     if (paymentModal) {
