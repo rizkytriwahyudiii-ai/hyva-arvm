@@ -211,15 +211,30 @@ function removeFromCart(index) {
 
 function toggleCart() {
     const cartModal = document.getElementById('cart-modal');
+    // Sesuaikan selector di bawah ini dengan id/class tombol chat admin Kakak (misal: #ai-chat-widget, .chat-admin, dll)
+    const chatWidget = document.getElementById('ai-chat-container') || document.querySelector('.ai-chat-toggle');
+
     if (!cartModal) return;
 
-    if (cartModal.style.display === "block") {
-        cartModal.style.display = "none";
-        document.body.style.overflow = 'auto';
+    // Jika cart sedang tertutup, maka kita buka
+    if (cartModal.style.display === 'none' || cartModal.style.display === '') {
+        cartModal.style.display = 'block';
+        
+        // Sembunyikan chat admin saat keranjang terbuka
+        if (chatWidget) {
+            chatWidget.style.opacity = '0';
+            chatWidget.style.pointerEvents = 'none';
+            chatWidget.style.transition = 'all 0.3s ease';
+        }
     } else {
-        cartModal.style.display = "block";
-        updateCartUI(); 
-        document.body.style.overflow = 'hidden';
+        // Jika cart sedang terbuka, maka kita tutup
+        cartModal.style.display = 'none';
+        
+        // Munculkan kembali chat admin saat keranjang ditutup
+        if (chatWidget) {
+            chatWidget.style.opacity = '1';
+            chatWidget.style.pointerEvents = 'auto';
+        }
     }
 }
 
