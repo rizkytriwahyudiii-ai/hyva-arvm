@@ -299,26 +299,21 @@
 </div>
 
 <div id="cart-modal" class="modal">
-    <div class="cart-drawer">
+   <div class="cart-drawer">
         <span class="close-icon" onclick="toggleCart()">&times;</span>
         <h2 class="cart-title">Your Cart</h2>
-        
         <div id="cart-items"></div>
-        
         <div class="cart-footer">
             <div class="total-row">
                 <span>Total</span>
                 <span id="total-price">Rp 0</span>
             </div>
-            
             <button onclick="checkoutOtomatis()" class="btn-payment-method">
                 <i class="fas fa-university"></i> BAYAR QRIS / TRANSFER BANK
             </button>
-            
             <button class="btn-wa-checkout" onclick="checkoutWA()">
                 <i class="fab fa-whatsapp"></i> CHECKOUT VIA WHATSAPP
             </button>
-            
             <button onclick="checkoutShopee()" class="btn-shopee">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg" alt="Shopee Logo" class="shopee-logo">
                 <span>BUY ON SHOPEE</span>
@@ -327,88 +322,32 @@
     </div>
 </div>
 
-<div id="hyva-payment-modal" class="hyva-pay-modal" style="display: none;">
+<div id="qris-modal" class="hyva-pay-modal">
     <div class="hyva-pay-content">
-        <span class="close-pay" onclick="closeHyvaPayModal()">&times;</span>
-        
-        <div id="pay-step-address">
-            <div class="hyva-pay-header">
-                <h3><i class="fas fa-map-marker-alt"></i> ALAMAT PENGIRIMAN</h3>
-                <p>Silakan lengkapi data kirim parfum Kakak dengan benar</p>
-            </div>
-            <div class="hyva-pay-body">
-                <div class="hyva-pay-field">
-                    <label>Nama Penerima</label>
-                    <input type="text" id="checkout-nama" placeholder="Contoh: Siti Aminah" required>
-                </div>
-                <div class="hyva-pay-field">
-                    <label>No. WhatsApp Aktif</label>
-                    <input type="tel" id="checkout-telepon" placeholder="Contoh: 081234567xxx" required>
-                </div>
-                <div class="hyva-pay-field">
-                    <label>Alamat Lengkap (Jalan, Blok, No. Rumah, RT/RW)</label>
-                    <textarea id="checkout-alamat-detail" placeholder="Nama Jalan, No Rumah, RT/RW, Dusun/Kelurahan" required></textarea>
-                </div>
-                
-                <div class="address-grid-fields">
-                    <div class="hyva-pay-field">
-                        <label>Provinsi</label>
-                        <select id="checkout-provinsi" onchange="handleProvinsiChange()" required>
-                            <option value="">Pilih Provinsi</option>
-                        </select>
-                    </div>
-                    <div class="hyva-pay-field">
-                        <label>Kota / Kabupaten</label>
-                        <select id="checkout-kota" onchange="handleKotaChange()" disabled required>
-                            <option value="">Pilih Kota/Kabupaten</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="address-grid-fields">
-                    <div class="hyva-pay-field">
-                        <label>Kecamatan</label>
-                        <select id="checkout-kecamatan" disabled required>
-                            <option value="">Pilih Kecamatan</option>
-                        </select>
-                    </div>
-                    <div class="hyva-pay-field">
-                        <label>Kode Pos</label>
-                        <input type="text" id="checkout-kodepos" placeholder="613xx" required>
-                    </div>
-                </div>
-
-                <button type="button" class="btn-next-pay" onclick="validateAddressAndProceed()">
-                    LANJUT KE PEMBAYARAN <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
+        <div class="hyva-pay-header">
+            <h3>METODE PEMBAYARAN</h3>
+            <span class="close-pay" onclick="closePayModal()">&times;</span>
         </div>
+        
+        <div class="hyva-pay-body">
+            <p class="pay-instruction">Silakan scan kode QRIS di bawah ini untuk menyelesaikan pesanan Anda</p>
+            
+            <div class="qris-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QRIS Hyva Arvm" class="qris-img">
+                <div class="qris-logo-overlay">QRIS</div>
+            </div>
 
-        <div id="pay-step-qris" style="display: none;">
-            <div class="hyva-pay-header">
-                <h3><i class="fas fa-qrcode"></i> QRIS & BANK TRANSFER</h3>
-                <p>Scan barcode atau transfer manual ke rekening resmi kami</p>
+            <div class="pay-details">
+                <span class="total-label">TOTAL TAGIHAN</span>
+                <h2 id="qris-total">Rp 0</h2>
             </div>
-            <div class="hyva-pay-body">
-                <div class="qris-container">
-                    <img src="qris.jpg" alt="QRIS Code Resmi Hyva Arvm" class="qris-img">
-                </div>
-                
-                <div class="pay-details">
-                    <span class="total-label">TOTAL AKHIR (TERMASUK ONGKIR)</span>
-                    <div id="qris-total">Rp 0</div>
-                </div>
-                
-                <div class="bank-info">
-                    <strong>BANK CENTRAL ASIA (BCA)</strong><br>
-                    No. Rekening: <span style="font-family: monospace; font-size: 16px; font-weight: bold;">1234567890</span><br>
-                    A/N: <strong>HYVA ARVM OFFICIAL</strong>
-                </div>
-                
-                <button class="btn-confirm-pay" onclick="confirmPaymentWhatsApp()">
-                    <i class="fab fa-whatsapp"></i> KONFIRMASI PEMBAYARAN VIA WA
-                </button>
+
+            <div class="bank-info">
+                <p>Atau Transfer Bank: <strong>BCA 123456789</strong></p>
+                <p>A/N: <strong class="notranslate" translate="no">HYVA ARVM OFFICIAL</strong></p>
             </div>
+
+            <button onclick="confirmPayment()" class="btn-confirm-pay">SAYA SUDAH BAYAR</button>
         </div>
     </div>
 </div>
