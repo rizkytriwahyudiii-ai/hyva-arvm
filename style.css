@@ -1043,231 +1043,67 @@ html {
 }
 
 /* ==========================================================================
-   10. PEMBAYARAN, METODE CHECKOUT & MODAL PREMIUM (HYVA ARVM COUTURE)
+   10. PEMBAYARAN & REAKSI HOVER METODE CHECKOUT (MINIMALIS LUXURY)
    ========================================================================== */
 
-/* --- PERBAIKAN HEADER & DRAWER CART --- */
-.cart-drawer-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    border-bottom: 1px solid #f2f2f2;
-}
-
-.cart-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.cart-title i {
-    font-size: 16px;
-    color: #8b734b; /* Aksen Emas Gelap Hyva */
-}
-
-.cart-footer {
-    padding: 25px;
-    background: #ffffff;
-    border-top: 1px solid #f2f2f2;
-}
-
-/* Row Total Harga Luxury */
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 5px 0;
-}
-
-.total-label-text {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #777777;
-    font-weight: 500;
-}
-
-.total-price-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1a1a1a;
-    font-family: 'Montserrat', sans-serif;
-}
-
-/* Pembungkus Tombol-Tombol */
-.checkout-actions-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 12px; /* Jarak antar tombol yang seimbang */
-}
-
-/* --- BASE UTAMA UNTUK SEMUA TOMBOL PEMBAYARAN MODERN --- */
+/* Base utama semua tombol agar seragam, rapi & minimalis */
 .btn-payment-method, 
 .btn-wa-checkout, 
 .btn-shopee {
+    margin-top: 10px;
+    margin-bottom: 12px; 
     width: 100%;
-    padding: 14px 18px;
-    border-radius: 12px; /* Melengkung modern dan halus */
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 14px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
-}
-
-/* Kotak Kecil Ikon di Dalam Tombol */
-.btn-pay-icon-box {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-}
-
-/* Wadah Teks Bertingkat */
-.btn-pay-text-box {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    text-align: left;
-    flex: 1;
-}
-
-.btn-pay-main {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.2px;
-}
-
-.btn-pay-sub {
-    font-size: 10.5px;
-    font-weight: 400;
-}
-
-/* Panah Indikator di Kanan */
-.btn-pay-arrow {
-    font-size: 11px;
-    opacity: 0.3;
-    transition: all 0.3s ease;
-}
-
-/* --- DETIL WARNA & HOVER UNTUK MASING-MASING TOMBOL --- */
-
-/* 1. Tombol QRIS / Bank (Premium Dark Gold) */
-.btn-payment-method {
-    background: linear-gradient(135deg, #111111 0%, #1c1c1c 100%);
+    padding: 14px;
+    background-color: #1a1a1a; /* Warna dasar hitam elegan */
     color: #ffffff;
-    border: 1px solid rgba(139, 115, 75, 0.3);
-}
-.btn-payment-method .btn-pay-icon-box.gold-theme {
-    background: rgba(139, 115, 75, 0.15);
-    border: 1px solid rgba(139, 115, 75, 0.4);
-    color: #c5a880; /* Emas mengkilap */
-}
-.btn-payment-method .btn-pay-sub { color: #aaaaaa; }
-
-.btn-payment-method:hover {
-    border-color: rgba(139, 115, 75, 0.8);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 115, 75, 0.2), 0 4px 10px rgba(0, 0, 0, 0.2);
-}
-.btn-payment-method:hover .btn-pay-icon-box.gold-theme {
-    background: #8b734b;
-    color: #fff;
-}
-.btn-payment-method:hover .btn-pay-main { color: #c5a880; }
-.btn-payment-method:hover .btn-pay-arrow { color: #c5a880; opacity: 1; transform: translateX(3px); }
-
-
-/* 2. Tombol WhatsApp (Clean White-Green Luxury) */
-.btn-wa-checkout {
-    background: #ffffff;
-    color: #1a1a1a;
-    border: 1px solid #e2e8f0;
-}
-.btn-wa-checkout .btn-pay-icon-box.whatsapp-theme {
-    background: rgba(37, 211, 102, 0.1);
-    color: #25d366;
-}
-.btn-wa-checkout .btn-pay-sub { color: #777777; }
-
-.btn-wa-checkout:hover {
-    border-color: rgba(37, 211, 102, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.1);
-}
-.btn-wa-checkout:hover .btn-pay-icon-box.whatsapp-theme {
-    background: #25d366;
-    color: #fff;
-}
-.btn-wa-checkout:hover .btn-pay-main { color: #25d366; }
-.btn-wa-checkout:hover .btn-pay-arrow { color: #25d366; opacity: 1; transform: translateX(3px); }
-
-
-/* 3. Tombol Shopee (Minimalist Soft Shopee Orange) */
-.btn-shopee {
-    background: #ffffff;
-    color: #1a1a1a;
-    border: 1px solid #e2e8f0;
-}
-.btn-shopee .btn-pay-icon-box.shopee-theme {
-    background: rgba(238, 77, 45, 0.08);
-}
-.shopee-logo-img {
-    width: 18px;
-    height: 18px;
-}
-.btn-shopee .btn-pay-sub { color: #777777; }
-
-.btn-shopee:hover {
-    border-color: rgba(238, 77, 45, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(238, 77, 45, 0.1);
-}
-.btn-shopee:hover .btn-pay-icon-box.shopee-theme {
-    background: #ee4d2d;
-}
-.btn-shopee:hover .shopee-logo-img {
-    filter: brightness(0) invert(1); /* Logo berubah jadi putih saat hover */
-}
-.btn-shopee:hover .btn-pay-main { color: #ee4d2d; }
-.btn-shopee:hover .btn-pay-arrow { color: #ee4d2d; opacity: 1; transform: translateX(3px); }
-
-
-/* Efek Tekan Global (Saat Di-klik) */
-.btn-payment-method:active, .btn-wa-checkout:active, .btn-shopee:active {
-    transform: translateY(1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* --- SINKRONISASI STYLE SISA MODAL LAIN AGAR TETAP SEMPURNA --- */
-.hyva-pay-modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0; top: 0;
-    width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(8px);
+    border: 1px solid #333;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+/* --- REAKSI HOVER KHUSUS MASING-MASING TOMBOL --- */
+
+/* 1. Tombol QRIS: Background berubah jadi emas mewah khas Hyva saat disentuh */
+.btn-payment-method:hover {
+    background-color: #8b734b; 
+    border-color: #8b734b;
+    transform: translateY(-1px);
+}
+
+/* 2. Tombol WhatsApp: Background berubah jadi hijau khas WhatsApp saat disentuh */
+.btn-wa-checkout:hover {
+    background-color: #25d366;
+    border-color: #25d366;
+    transform: translateY(-1px);
+}
+
+/* 3. Tombol Shopee: Background berubah jadi oranye khas Shopee saat disentuh */
+.btn-shopee:hover {
+    background-color: #ee4d2d;
+    border-color: #ee4d2d;
+    transform: translateY(-1px);
+}
+
+/* Ukuran Logo Shopee agar tetap proporsional di dalam tombol */
+.shopee-logo {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+}
+
+/* Efek mikro ketika tombol diklik (Menekan Kebawah) */
+.btn-payment-method:active, 
+.btn-wa-checkout:active, 
+.btn-shopee:active {
+    transform: translateY(1px);
 }
 
 /* ==========================================================================
