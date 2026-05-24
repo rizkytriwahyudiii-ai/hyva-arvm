@@ -211,17 +211,14 @@ function removeFromCart(index) {
 
 function toggleCart() {
     const cartModal = document.getElementById('cart-modal');
-    // PERBAIKAN NYATA: Menargetkan class tombol chat admin sesuai HTML Kakak (.whatsapp-float)
     const chatWidget = document.querySelector('.whatsapp-float');
 
     if (!cartModal) return;
 
     if (cartModal.style.display === "block") {
-        // --- KONDISI SAAT KERANJANG DITUTUP ---
         cartModal.style.display = "none";
-        document.body.style.overflow = 'auto'; // Mengembalikan scroll halaman utama
+        document.body.style.overflow = 'auto';
         
-        // Memunculkan kembali tombol "Chat Admin" secara halus
         if (chatWidget) {
             chatWidget.style.opacity = '1';
             chatWidget.style.visibility = 'visible';
@@ -229,12 +226,10 @@ function toggleCart() {
             chatWidget.style.transition = 'all 0.3s ease';
         }
     } else {
-        // --- KONDISI SAAT KERANJANG DIBUKA ---
         cartModal.style.display = "block";
-        updateCartUI(); // Menampilkan isi data parfum di dalam keranjang
-        document.body.style.overflow = 'hidden'; // Mengunci layar belakang agar tidak bisa di-scroll
+        updateCartUI(); 
+        document.body.style.overflow = 'hidden';
         
-        // Menyembunyikan total tombol "Chat Admin" secara senyap & mutlak
         if (chatWidget) {
             chatWidget.style.opacity = '0';
             chatWidget.style.visibility = 'hidden';
@@ -242,6 +237,22 @@ function toggleCart() {
             chatWidget.style.transition = 'all 0.3s ease';
         }
     }
+}
+
+function checkoutOtomatis() {
+    if (cart.length === 0) {
+        showHyvaToast("Keranjang belanja Kakak masih kosong!", "fas fa-exclamation-circle");
+        return;
+    }
+
+    const totalText = document.getElementById('total-price').innerText;
+    const cleanTotal = totalText.replace(/[^0-9]/g, '');
+
+    // 1. Tutup keranjang belanja dulu
+    toggleCart();
+
+    // 2. Tampilkan pop-up QRIS / Bank Transfer
+    openHyvaPayModal(cleanTotal);
 }
 
 /* ==========================================================================
