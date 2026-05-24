@@ -122,9 +122,8 @@
     </section>
 
     <section class="shipping-tracking-section" style="max-width: 1400px; margin: 30px auto; padding: 0 5%;">
-    <div id="user-order-tracking-section">
-        </div>
-</section>
+        <div id="user-order-tracking-section"></div>
+    </section>
 
     <section class="testimonials-section">
         <div class="testimonials-container">
@@ -327,6 +326,74 @@
     </div>
 </div>
 
+<div id="hyva-payment-modal" class="hyva-pay-modal" style="display: none;">
+    <div class="hyva-pay-content" style="max-width: 650px; margin: 50px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <div class="hyva-pay-header" style="background: #000; color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; letter-spacing: 1px;"><i class="fas fa-truck-moving"></i> PROSES PESANAN</h3>
+            <span class="close-pay" onclick="closeHyvaPayModal()" style="font-size: 28px; cursor: pointer; color: #fff; line-height: 1;">&times;</span>
+        </div>
+        
+        <div class="hyva-pay-body" style="padding: 25px;">
+            <div id="pay-step-address" style="display: block;">
+                <p class="pay-instruction" style="margin-bottom: 20px; font-size: 14px; color: #555;">Silakan lengkapi data pengiriman Anda dengan benar:</p>
+                
+                <div class="hyva-input-group" style="margin-bottom: 15px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 10px; background: #fafafa;">
+                    <i class="fas fa-user" style="color: #a68b5c;"></i>
+                    <input type="text" id="checkout-nama" placeholder="Nama Penerima" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" required>
+                </div>
+                
+                <div class="hyva-input-group" style="margin-bottom: 15px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 10px; background: #fafafa;">
+                    <i class="fas fa-phone" style="color: #a68b5c;"></i>
+                    <input type="tel" id="checkout-telepon" placeholder="No. WhatsApp Aktif" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" required>
+                </div>
+
+                <div class="address-grid-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
+                        <select id="checkout-provinsi" onchange="handleProvinsiChange()" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; cursor: pointer;">
+                            <option value="">Pilih Provinsi</option>
+                        </select>
+                    </div>
+                    <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; background: #fafafa;">
+                        <select id="checkout-kota" onchange="handleKotaChange()" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; cursor: pointer;" disabled>
+                            <option value="">Pilih Kota/Kabupaten</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #ddd; padding: 12px; border-radius: 6px; margin-bottom: 15px; background: #fafafa;">
+                    <select id="checkout-kecamatan" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; cursor: pointer;" disabled>
+                        <option value="">Pilih Kecamatan</option>
+                    </select>
+                </div>
+
+                <div class="hyva-input-group" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: flex-start; gap: 10px; background: #fafafa;">
+                    <i class="fas fa-map-marked-alt" style="color: #a68b5c; margin-top: 3px;"></i>
+                    <textarea id="checkout-detail-alamat" placeholder="Nama Jalan, No. Rumah, RT/RW, Ciri Rumah..." style="border: none; width: 100%; outline: none; resize: none; height: 70px; background: transparent; font-family: 'Montserrat', sans-serif;" required></textarea>
+                </div>
+
+                <button type="button" onclick="saveShippingAddress()" class="btn-confirm-pay" style="width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; transition: background 0.3s;">
+                    SIMPAN ALAMAT & LANJUT
+                </button>
+            </div>
+
+            <div id="pay-step-qris" style="display: none;">
+                <p class="pay-instruction" style="text-align: center; font-size: 14px; color: #555;">Silakan scan kode QRIS di bawah ini untuk menyelesaikan pesanan Anda</p>
+                <div class="qris-container" style="text-align: center; margin: 20px 0;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QRIS Hyva Arvm" class="qris-img" style="width: 220px; height: 220px; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                    <div class="qris-logo-overlay" style="font-weight: bold; margin-top: 8px; color: #a68b5c; font-size: 14px; letter-spacing: 1px;">QRIS RESMI HYVA ARVM</div>
+                </div>
+                <div class="pay-details" style="text-align: center; margin-bottom: 20px; background: #fdfaf4; padding: 15px; border-radius: 6px; border: 1px dashed #e6daf2;">
+                    <span class="total-label" style="font-size: 11px; color: #888; letter-spacing: 1px; display: block; margin-bottom: 4px;">TOTAL TAGIHAN</span>
+                    <h2 id="qris-total" style="color: #a68b5c; margin: 0; font-size: 26px;">Rp 0</h2>
+                </div>
+                <button onclick="confirmPayment()" class="btn-confirm-pay" style="width: 100%; padding: 15px; background: #a68b5c; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Montserrat', sans-serif;">
+                    SAYA SUDAH BAYAR VIA QRIS
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="qris-modal" class="hyva-pay-modal">
     <div class="hyva-pay-content">
         <div class="hyva-pay-header">
@@ -447,7 +514,7 @@
     </div>
 </footer>
 
-</body>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</body>
+</html>
