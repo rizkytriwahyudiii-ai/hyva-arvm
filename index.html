@@ -327,60 +327,7 @@
     </div>
 </div>
 
-<div id="cart-modal" class="modal">
-    <div class="cart-drawer">
-        <div class="cart-drawer-header">
-            <h2 class="cart-title">
-                <i class="fas fa-shopping-bag"></i> Shopping Cart
-            </h2>
-            <span class="close-icon" onclick="toggleCart()">&times;</span>
-        </div>
 
-        <div id="cart-items"></div>
-
-        <div class="cart-footer">
-            <div class="total-row">
-                <span class="total-label-text">Subtotal Tagihan</span>
-                <span id="total-price" class="total-price-value">Rp 0</span>
-            </div>
-
-            <div class="checkout-actions-wrapper">
-                <button onclick="checkoutOtomatis()" class="btn-payment-method">
-                    <div class="btn-pay-icon-box gold-theme">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    <div class="btn-pay-text-box">
-                        <span class="btn-pay-main">Bayar QRIS / Transfer Bank</span>
-                        <span class="btn-pay-sub">Otomatis, Instan & Aman via QR Code</span>
-                    </div>
-                    <i class="fas fa-chevron-right btn-pay-arrow"></i>
-                </button>
-
-                <button onclick="checkoutWA()" class="btn-wa-checkout">
-                    <div class="btn-pay-icon-box whatsapp-theme">
-                        <i class="fab fa-whatsapp"></i>
-                    </div>
-                    <div class="btn-pay-text-box">
-                        <span class="btn-pay-main">Checkout via WhatsApp</span>
-                        <span class="btn-pay-sub">Hubungi Admin & Kirim Detail Manual</span>
-                    </div>
-                    <i class="fas fa-chevron-right btn-pay-arrow"></i>
-                </button>
-
-                <button onclick="checkoutShopee()" class="btn-shopee">
-                    <div class="btn-pay-icon-box shopee-theme">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg" alt="Shopee Logo" class="shopee-logo-img">
-                    </div>
-                    <div class="btn-pay-text-box">
-                        <span class="btn-pay-main">Beli via Shopee Official</span>
-                        <span class="btn-pay-sub">Tersedia COD, Gratis Ongkir & Promo</span>
-                    </div>
-                    <i class="fas fa-chevron-right btn-pay-arrow"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 <div id="product-detail-modal" class="modal">
     <div class="modal-content detail-content" style="max-width: 900px; display: flex; flex-direction: row; gap: 30px; align-items: flex-start;">
         <span class="close" onclick="closeDetail()" style="position: absolute; right: 20px; top: 10px; cursor: pointer; font-size: 28px;">&times;</span>
