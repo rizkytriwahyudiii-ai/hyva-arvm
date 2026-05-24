@@ -1328,3 +1328,141 @@ function closeHyvaPayModal() {
         document.body.style.overflow = 'auto'; // Mengembalikan scroll layar utama
     }
 }
+
+/* ==========================================================================\r
+   5. DATABASE & LOGIKA WILAYAH INDONESIA JALUR API PUBLIK (OTOMATIS & RINGAN)\r\n   ========================================================================== */
+
+// Objek penampung ID wilayah untuk memicu pencarian berjenjang
+let wilayahIds = { provinsi: "", kota: "" };
+
+// 1. FUNGSI UTAMA UNTUK MEMANGGIL PROVINSI SAAT MODAL DIBUKA
+async function loadProvinsi() {
+    const datalistProvinsi = document.getElementById('list-provinsi');
+    const inputProvinsi = document.getElementById('checkout-provinsi');
+    const inputKota = document.getElementById('checkout-kota');
+    const inputKecamatan = document.getElementById('checkout-kecamatan');
+    
+    if (!datalistProvinsi) return;
+    
+    // Reset tampilan awal form input & kunci kolom turunan
+    datalistProvinsi.innerHTML = "";
+    if (inputProvinsi) { inputProvinsi.value = ""; inputProvinsi.placeholder = "Memuat Provinsi..."; }
+    if (inputKota) { inputKota.value = ""; inputKota.disabled = true; }
+    if (inputKecamatan) { inputKecamatan.value = ""; inputKecamatan.disabled = true; }
+
+    try {
+        // Ambil data 38 Provinsi dari API Publik
+        const response = await fetch('https://idn-area.renderverse.xyz/api/provinces');
+        const provinces = await response.json();
+
+        // Bersihkan ulang datalist sebelum diisi
+        datalistProvinsi.innerHTML = "";
+        
+        // Simpan data ke elemen dataset global agar bisa dibaca saat user memilih teks nama provinsi
+        window.globalProvincesData = provinces;
+
+        provinces.forEach(prov => {
+            let option = document.createElement('option');
+            option.value = prov.name; // Menyimpan nama provinsi (Contoh: "JAWA TIMUR")
+            option.setAttribute('data-id', prov.id); // Menyimpan ID rahasia untuk fetch kota
+            datalistProvinsi.appendChild(option);
+        });
+
+        if (inputProvinsi) inputProvinsi.placeholder = "Pilih Provinsi Anda";
+    } catch (error) {
+        console.error("Gagal mengambil data provinsi API:", error);
+        if (inputProvinsi) inputProvinsi.placeholder = "Gagal memuat. Coba buka ulang modal.";
+    }
+}
+
+// 2. EVENT LISTENER UNTUK MENDETEKSI INTERAKSI PILIHAN USER
+document.addEventListener("DOMContentLoaded", function() {
+    const inputProvinsi = document.getElementById('checkout-provinsi');
+    const inputKota = document.getElementById('checkout-kota');
+    const inputKecamatan = document.getElementById('checkout-kecamatan');
+    
+    const datalistKota = document.getElementById('list-kota');
+    const datalistKecamatan = document.getElementById('list-kecamatan');
+
+    // MENGATUR INPUT PROVINSI -> UNTUK MENGAMBIL KOTA
+    if (inputProvinsi) {
+        inputProvinsi.addEventListener('input', async function() {
+            const currentVal = this.value.toUpperCase();
+            
+            // Cari data cocok dari dataset global provinces yang di-download tadi
+            const matchedProv = window.globalProvincesData ? window.globalProvincesData.find(p => p.name === currentVal) : null;
+
+            if (matchedProv) {
+                // Jika valid cocok dengan nama provinsi di Indonesia
+                wilayahIds.provinsi = matchedProv.id; // Ambil ID-nya
+                
+                inputKota.disabled = false;
+                inputKota.value = "";
+                inputKota.placeholder = "Memuat Kota/Kabupaten...";
+                if (datalistKota) datalistKota.innerHTML = "";
+                if (inputKecamatan) { inputKecamatan.value = ""; inputKecamatan.disabled = true; }
+
+                try {
+                    // Tembak API Kota berdasarkan ID Provinsi terpilih
+                    const res = await fetch(`https://idn-area.renderverse.xyz/api/regencies?province_id=${wilayahIds.provinsi}`);
+                    const regencies = await res.json();
+                    
+                    window.globalRegenciesData = regencies; // Ambil simpan untuk kecamatan nanti
+                    if (datalistKota) datalistKota.innerHTML = "";
+
+                    regencies.forEach(kota => {
+                        let option = document.createElement('option');
+                        option.value = kota.name; // Menyimpan nama kota (Contoh: "KABUPATEN MOJOKERTO")
+                        option.setAttribute('data-id', kota.id);
+                        datalistKota.appendChild(option);
+                    });
+
+                    inputKota.placeholder = "Pilih Kota/Kabupaten";
+                } catch (err) {
+                    console.error("Gagal memuat kota via API:", err);
+                }
+            } else {
+                // Jika input dihapus atau diketik ngawur, amankan form ke bawah kembali terkunci
+                if (inputKota) { inputKota.disabled = true; inputKota.value = ""; inputKota.placeholder = "Pilih Kota/Kabupaten"; }
+                if (inputKecamatan) { inputKecamatan.disabled = true; inputKecamatan.value = ""; }
+            }
+        });
+    }
+
+    // MENGATUR INPUT KOTA -> UNTUK MENGAMBIL KECAMATAN
+    if (inputKota) {
+        inputKota.addEventListener('input', async function() {
+            const currentVal = this.value.toUpperCase();
+            const matchedKota = window.globalRegenciesData ? window.globalRegenciesData.find(k => k.name === currentVal) : null;
+
+            if (matchedKota) {
+                wilayahIds.kota = matchedKota.id; // Ambil ID Kotanya
+
+                inputKecamatan.disabled = false;
+                inputKecamatan.value = "";
+                inputKecamatan.placeholder = "Memuat Kecamatan...";
+                if (datalistKecamatan) datalistKecamatan.innerHTML = "";
+
+                try {
+                    // Tembak API Kecamatan berdasarkan ID Kota terpilih
+                    const res = await fetch(`https://idn-area.renderverse.xyz/api/districts?regency_id=${wilayahIds.kota}`);
+                    const districts = await res.json();
+                    
+                    if (datalistKecamatan) datalistKecamatan.innerHTML = "";
+
+                    districts.forEach(kec => {
+                        let option = document.createElement('option');
+                        option.value = kec.name; // Menyimpan nama kecamatan (Contoh: "SOOKO")
+                        datalistKecamatan.appendChild(option);
+                    });
+
+                    inputKecamatan.placeholder = "Pilih Kecamatan";
+                } catch (err) {
+                    console.error("Gagal memuat kecamatan via API:", err);
+                }
+            } else {
+                if (inputKecamatan) { inputKecamatan.disabled = true; inputKecamatan.value = ""; }
+            }
+        });
+    }
+});
