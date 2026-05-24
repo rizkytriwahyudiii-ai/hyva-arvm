@@ -1465,3 +1465,13 @@ if (document.readyState === "loading") {
 function loadProvinsi() {
     loadDaftarProvinsi();
 }
+// Contoh fungsi untuk mengambil data kota berdasarkan ID Provinsi
+async function getKota(provinsiId) {
+    try {
+        const response = await fetch(`https://wilayah.id/api/regencies/${provinsiId}.json`);
+        const result = await response.json();
+        return result.data; // Data kota akan kembali ke sini
+    } catch (error) {
+        console.error("Gagal mengambil data kota:", error);
+    }
+}
