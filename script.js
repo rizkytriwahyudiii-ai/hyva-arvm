@@ -211,17 +211,17 @@ function removeFromCart(index) {
 
 function toggleCart() {
     const cartModal = document.getElementById('cart-modal');
-    // PERBAIKAN: Menggunakan ID yang tepat sesuai engine database script.js Kakak (#ai-chat-widget)
-    const chatWidget = document.getElementById('ai-chat-widget');
+    // PERBAIKAN NYATA: Menargetkan class tombol chat admin sesuai HTML Kakak (.whatsapp-float)
+    const chatWidget = document.querySelector('.whatsapp-float');
 
     if (!cartModal) return;
 
     if (cartModal.style.display === "block") {
-        // --- PROSES MENUTUP CART ---
+        // --- KONDISI SAAT KERANJANG DITUTUP ---
         cartModal.style.display = "none";
-        document.body.style.overflow = 'auto'; // Mengembalikan scroll halaman
+        document.body.style.overflow = 'auto'; // Mengembalikan scroll halaman utama
         
-        // Munculkan kembali tombol chat admin secara halus
+        // Memunculkan kembali tombol "Chat Admin" secara halus
         if (chatWidget) {
             chatWidget.style.opacity = '1';
             chatWidget.style.visibility = 'visible';
@@ -229,12 +229,12 @@ function toggleCart() {
             chatWidget.style.transition = 'all 0.3s ease';
         }
     } else {
-        // --- PROSES MEMBUKA CART ---
+        // --- KONDISI SAAT KERANJANG DIBUKA ---
         cartModal.style.display = "block";
-        updateCartUI(); // PENTING: Menampilkan data produk di keranjang belanja
-        document.body.style.overflow = 'hidden'; // Mengunci scroll latar belakang
+        updateCartUI(); // Menampilkan isi data parfum di dalam keranjang
+        document.body.style.overflow = 'hidden'; // Mengunci layar belakang agar tidak bisa di-scroll
         
-        // Sembunyikan total tombol chat admin secara mutlak
+        // Menyembunyikan total tombol "Chat Admin" secara senyap & mutlak
         if (chatWidget) {
             chatWidget.style.opacity = '0';
             chatWidget.style.visibility = 'hidden';
