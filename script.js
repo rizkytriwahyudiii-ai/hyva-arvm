@@ -1258,30 +1258,66 @@ function showHyvaToast(message, iconClass = "fas fa-info-circle") {
         document.body.appendChild(container);
     }
 
-    // Mengubah format pesan agar nama produk otomatis ter-highlight cetak tebal lembut
-    let formattedMessage = message.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');
+    let formattedMessage = message.replace(/\"([^\"]+)\"/g, '<strong>\"$1\"</strong>');
 
     const toast = document.createElement('div');
     toast.className = 'hyva-toast';
     toast.innerHTML = `
-        <div class="hyva-toast-icon-wrapper">
-            <i class="${iconClass}"></i>
+        <div class=\"hyva-toast-icon-wrapper\">
+            <i class=\"${iconClass}\"></i>
         </div>
-        <div class="hyva-toast-text">${formattedMessage}</div>
+        <div class=\"hyva-toast-text\">${formattedMessage}</div>
     `;
     
     container.appendChild(toast);
 
-    // Animasi Muncul
     setTimeout(() => {
         toast.classList.add('show');
     }, 50);
 
-    // Animasi Menghilang Otomatis dalam 4 detik
     setTimeout(() => {
-        toast.classList.add('hide');
-        setTimeout(() => {
-            toast.remove();
-        }, 450);
+        toast.classList.remove('show');
+        setTimeout(() => { toast.remove(); }, 400);
     }, 4000);
+}
+
+
+// ==========================================================================
+// PASTE / TARUH KODE BARU KAKAK DI SINI (BAGIAN PALING BAWAH FILE)
+// ==========================================================================
+
+function openAddressModal() {
+    // 1. Tutup keranjang belanja terlebih dahulu secara otomatis
+    const cartModal = document.getElementById('cart-modal');
+    if (cartModal) cartModal.style.display = 'none';
+
+    // 2. Tampilkan modal pengiriman/pembayaran utama
+    const paymentModal = document.getElementById('hyva-payment-modal');
+    if (paymentModal) {
+        paymentModal.style.display = 'block';
+        
+        // Paksa tampilan pop-up agar memunculkan Step 1 (Formulir Isi Alamat)
+        const stepAddress = document.getElementById('pay-step-address');
+        const stepQris = document.getElementById('pay-step-qris');
+        if (stepAddress) stepAddress.style.display = 'block';
+        if (stepQris) stepQris.style.display = 'none';
+        
+        document.body.style.overflow = 'hidden';
+    }
+
+    // 3. Panggil data provinsi otomatis biar tidak kosong saat terbuka
+    const provinsiSelect = document.getElementById('checkout-provinsi');
+    if (provinsiSelect && provinsiSelect.options.length <= 1) {
+        if (typeof loadProvinsi === 'function') {
+            loadProvinsi();
+        }
+    }
+}
+
+function closeHyvaPayModal() {
+    const paymentModal = document.getElementById('hyva-payment-modal');
+    if (paymentModal) {
+        paymentModal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Mengembalikan scroll layar utama
+    }
 }
