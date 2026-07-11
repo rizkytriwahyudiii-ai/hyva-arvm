@@ -1,0 +1,100 @@
+HYVA ARVM — COLOR PALETTE CSS
+========================================
+
+[ PUTIH & LIGHT ]
+#ffffff  → Putih utama
+#fff      → Putih singkat
+#fcfcfc   → Background soft premium
+#fafafa   → Input / background lembut
+#f9f9f9   → Card / hover light
+#fdfaf4   → Cream luxury
+#fdfbf7   → Background review form
+#f8f9fa   → Header modal
+#f5f5f5   → Hover pagination
+#f2f2f2   → Border soft
+#f0f0f0   → Border light
+#eeeeee   → Border umum
+#ddd      → Border abu soft
+#dcdcdc   → Footer border
+#e0e0e0   → Text terang
+
+========================================
+[ HITAM & DARK ]
+#000000   → Hitam utama
+#000      → Hitam singkat
+#111111   → Text heading
+#1a1a1a   → Luxury black
+#1a2b48   → Navy footer
+#222222   → Tombol dark
+#262525   → Icon/navbar dark
+#333333   → Text dark
+#444444   → Text medium dark
+#555555   → Text paragraph
+#666666   → Text secondary
+#777777   → Subtitle
+#888888   → Text soft
+#999999   → Placeholder
+#aaaaaa   → Divider text
+#bbbbbb   → Border hover
+#cccccc   → Dot inactive
+
+========================================
+[ GOLD / LUXURY BRAND ]
+#8b734b   → Gold utama brand
+#a68b5b   → Gold hover
+#a68b5c   → Gold luxury utama
+#887149   → Footer gold dark
+#725d3a   → Gold dark hover
+#d4af37   → Luxury gold bright
+
+RGBA GOLD:
+rgba(139, 115, 75, 0.1)
+rgba(139, 115, 75, 0.2)
+rgba(139, 115, 75, 0.3)
+rgba(139, 115, 75, 0.4)
+
+rgba(166, 139, 92, 0.15)
+rgba(212, 175, 55, 0.2)
+
+========================================
+[ WHATSAPP ]
+#25d366   → WhatsApp green
+#25D366   → WhatsApp uppercase
+#128c7e   → Dark WA gradient
+#1ebe57   → Hover WA button
+
+========================================
+[ SHOPEE ]
+#ee4d2d   → Shopee orange
+
+RGBA SHOPEE:
+rgba(238, 77, 45, 0.3)
+
+========================================
+[ MERAH ]
+#a30014   → Pagination active luxury
+#cc0000   → Remove button
+#ff0000   → Cart badge
+#ff4d4d   → Hover remove
+
+========================================
+[ OVERLAY / SHADOW ]
+rgba(0,0,0,0.02)
+rgba(0,0,0,0.05)
+rgba(0,0,0,0.06)
+rgba(0,0,0,0.1)
+rgba(0,0,0,0.2)
+rgba(0,0,0,0.3)
+rgba(0,0,0,0.4)
+rgba(0,0,0,0.5)
+rgba(0,0,0,0.6)
+rgba(0,0,0,0.8)
+
+========================================
+[ REKOMENDASI WARNA UTAMA BRAND ]
+Primary Gold    : #8b734b
+Luxury Gold     : #a68b5c
+Dark Background : #1a1a1a
+Soft Cream      : #fdfaf4
+Main White      : #ffffff
+Main Text       : #333333

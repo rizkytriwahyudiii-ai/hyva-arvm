@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title class="notranslate" translate="no">Hyva Arvm | Luxury Fragrance</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script> 
+    <script type="text/javascript"
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="SET_YOUR_CLIENT_KEY_HERE"></script>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo-wrapper notranslate" translate="no" onclick="refreshToTop(event)" style="cursor: pointer;">
+            <img src="logo-gradasi.png" alt="Hyva Arvm Logo">
+            <div class="brand-text">
+                <span class="main-title">HYVA ARVM</span>
+                <span class="sub-title">PERFUME</span>
+            </div>
+        </div>
+
+        <div class="nav-middle-section">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="aromaSearch" onkeyup="filterAroma()" placeholder="Cari parfum favoritmu berdasarkan nama, deskripsi, karakter..." class="search-input">
+            </div>
+
+            <div class="nav-menu">
+                <a href="#" class="nav-link" onclick="filterProducts('all')">Shop All</a>
+                <a href="#" class="nav-link" onclick="filterProducts('wanita')">Parfum Wanita</a>
+                <a href="#" class="nav-link" onclick="filterProducts('pria')">Parfum Pria</a>
+                <a href="#" class="nav-link" onclick="filterProducts('unisex')">Parfum Unisex</a>
+                <a href="#tentang-produk" class="nav-link">Tentang Kami</a>
+            </div> 
+        </div> 
+
+        <div class="nav-icons">
+            <div onclick="toggleCart()" class="cart-trigger hyva-nav-item">
+                <i class="fas fa-shopping-bag nav-icon-style"></i>
+                <span id="cart-count" class="cart-badge-v2">0</span>
+            </div>
+
+            <div class="nav-divider-vertical"></div>
+
+            <div id="auth-guest-buttons" class="hyva-auth-buttons">
+                <button onclick="openAuthModal('login')" class="btn-login-tokped">Masuk</button>
+                <button onclick="openAuthModal('daftar')" class="btn-register-tokped">Daftar</button>
+            </div>
+
+            <div id="auth-user-info" class="hyva-user-profile" style="display: none;" onclick="handleProfileClick()">
+                <i class="fas fa-user-circle"></i>
+                <span id="user-auth-text">Nama User</span>
+            </div>
+        </div>
+    </div> 
+</nav>
+
+<div id="logout-modal" class="hyva-pay-modal">
+    <div class="logout-box">
+        <h3>Keluar dari Akun?</h3>
+        <p>Anda perlu login kembali untuk mengakses keranjang dan riwayat pesanan.</p>
+        <div class="logout-actions">
+            <button class="btn-login-tokped" onclick="closeLogoutModal()">Batal</button>
+            <button class="btn-register-tokped" onclick="confirmLogout()">Ya, Keluar</button>
+        </div>
+    </div>
+</div>
+
+<header class="hero-section">
+    <div class="hero-slideshow">
+        <div class="slide" style="background-image: url('gambar1.jpg');"></div>
+        <div class="slide" style="background-image: url('gambar2.jpg');"></div>
+        <div class="slide" style="background-image: url('gambar4.jpg');"></div>
+    </div>
+    
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <span class="hero-subtitle notranslate" translate="no">HYVA ARVM PERFUME</span>
+        <div class="hero-divider"></div>
+        <h1>ELEVATE YOUR SCENT</h1>
+        <p>Inspired by world-class fragrances. Crafted with <strong>Extrait de Parfum</strong> quality for longevity up to 12 hours.</p>
+        <button class="btn-shop-now" onclick="document.getElementById('product-section').scrollIntoView({behavior: 'smooth'})">EXPLORE COLLECTION</button>
+    </div>
+</header>
+
+<main>
+    <section id="product-section" class="container">
+        <div class="product-grid" id="product-list"></div>
+    </section>
+
+    <section class="luxury-benefits">
+        <div class="benefits-container">
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h3>GARANSI AMAN</h3>
+                <p>Botol pecah saat pengiriman? Kami kirim baru 100% gratis tanpa ribet.</p>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <h3>PREMIUM OILS</h3>
+                <p>Menggunakan bibit parfum konsentrat tinggi standar Eropa, aman di kulit & pakaian.</p>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h3>EXTRAIT DE PARFUM</h3>
+                <p>Tingkat konsentrasi tertinggi di kelasnya untuk ketahanan aroma hingga 12 jam+.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="shipping-tracking-section" style="max-width: 1400px; margin: 30px auto; padding: 0 5%;">
+        <div id="user-order-tracking-section"></div>
+    </section>
+
+    <section class="testimonials-section">
+        <div class="testimonials-container">
+            <div class="testimonials-header">
+                <span class="sub-title-gold">REVIEWS</span>
+                <h2>WHAT THEY SAY</h2>
+                <div class="hero-divider" style="margin: 15px auto;"></div>
+                <p>Kata mereka yang telah merasakan kemewahan dan ketahanan aroma <span class="notranslate" translate="no">Hyva Arvm</span></p>
+            </div>
+
+            <div id="user-review-box" class="review-form-container" style="display: none;">
+                <div class="review-form-header">
+                    <h3><i class="fas fa-shopping-bag text-gold"></i> Pesanan Selesai! Bagaimana Aroma Parfum Anda?</h3>
+                    <p>Ulasan Kakak sangat membantu pencinta parfum lainnya.</p>
+                </div>
+                
+                <form id="hyva-submit-review" onsubmit="saveUserReview(event)">
+                    <div class="rating-input-wrapper">
+                        <span>Rating Aroma:</span>
+                        <div class="stars-rating-select">
+                            <i class="far fa-star star-btn" onclick="setRatingReview(1)"></i>
+                            <i class="far fa-star star-btn" onclick="setRatingReview(2)"></i>
+                            <i class="far fa-star star-btn" onclick="setRatingReview(3)"></i>
+                            <i class="far fa-star star-btn" onclick="setRatingReview(4)"></i>
+                            <i class="far fa-star star-btn" onclick="setRatingReview(5)"></i>
+                        </div>
+                        <input type="hidden" id="selected-rating-value" value="5">
+                    </div>
+
+                    <div class="review-textarea-group">
+                        <textarea id="user-review-text" placeholder="Ceritakan ketahanan aromanya..."></textarea>
+                    </div>
+
+                    <div class="review-form-actions">
+                        <button type="button" class="btn-skip-review" onclick="closeReviewBox()">Nanti Saja</button>
+                        <button type="submit" class="btn-submit-review">Kirim Ulasan</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="dynamic-testimonials-grid" class="testimonials-grid-v2"></div>
+            <div id="review-pagination-container"></div>
+        </div>
+    </section>
+
+    <section class="scent-atelier-section">
+        <div class="atelier-container">
+            <div class="atelier-header">
+                <span class="gold-badge notranslate" translate="no">HYVA PRIVATE AI</span>
+                <h2>THE SCENT ATELIER</h2>
+                <p>Tuliskan cerita, memori, atau suasana yang Kakak inginkan. Biarkan kecerdasan buatan kami meracik panduan aroma eksklusif Anda.</p>
+            </div>
+
+            <div class="atelier-card">
+                <div class="atelier-input-block">
+                    <label>CERITAKAN SUASANA ANDA</label>
+                    <textarea id="ai-user-input" onkeypress="handleAIKeyPress(event)" placeholder="Contoh: Aku ingin aroma yang menenangkan seperti kedai kopi di pagi hari yang mendung, atau parfum yang cocok untuk meeting penting agar terlihat karismatik..."></textarea>
+                    
+                    <div class="action-wrapper">
+                        <button onclick="sendAIChat()" id="ai-send-btn">
+                            RACIK AROMA SAYA <i class="fas fa-layer-group"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="atelier-output-block">
+                    <label>RACIKAN ASSISTANT LUXURY</label>
+                    <div id="ai-response-display" class="response-placeholder">
+                        Hasil analisis kepribadian aroma Kakak akan dirangkum di sini...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tentang-produk" class="about-product-section">
+        <div class="about-container">
+            <div class="about-flex">
+                <div class="about-img-box">
+                    <div class="luxury-frame-border"></div>
+                    <div class="about-slider-wrapper">
+                        <img src="tentang-kami.png" alt="Hyva Arvm Luxury Perfume" class="about-slide active" loading="lazy">
+                        <img src="ROMANCE-WISH.jpeg" alt="Hyva Arvm Romance Collection" class="about-slide" loading="lazy">
+                        <img src="AQUA-KISS.jpeg" alt="Hyva Arvm Aqua Collection" class="about-slide" loading="lazy">
+                    </div>        
+                    <div class="slider-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
+                <div class="about-content">
+                    <span class="sub-title-gold notranslate" translate="no">HYVA ARVM PERFUME</span>
+                    <h2>Kemewahan Aroma yang Bertahan Sepanjang Hari</h2>
+                    <p>Setiap botol <span class="notranslate" translate="no">Hyva Arvm</span> diracik dengan konsentrasi <strong>Extrait de Parfum</strong> kualitas premium. Ketahanan hingga 12 jam, dirancang khusus untuk Anda yang menghargai karakter.</p>
+                    <div class="feature-list">
+                        <div class="feature-item">
+                            <div class="icon-luxury"><i class="fas fa-crown"></i></div>
+                            <div class="text">
+                                <strong>Kualitas Premium</strong>
+                                <p>Bahan pilihan aman di kulit dan pakaian.</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="icon-luxury"><i class="far fa-hourglass"></i></div>
+                            <div class="text">
+                                <strong>Tahan 12 Jam+</strong>
+                                <p>Aroma konsisten menemani aktivitas Anda.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div id="auth-modal" class="hyva-auth-modal">
+    <div class="hyva-auth-container">
+        <span class="hyva-close-btn" onclick="closeAuthModal()">&times;</span>
+
+        <div class="hyva-auth-tabs">
+            <button id="tab-login" class="hyva-tab active" onclick="showAuthTab('login')">LOG IN</button>
+            <button id="tab-daftar" class="hyva-tab" onclick="showAuthTab('daftar')">DAFTAR</button>
+        </div>
+
+        <form id="form-login" class="hyva-auth-form" onsubmit="handleUserAuth(event, 'login')">
+            <div class="hyva-input-group">
+                <i class="far fa-envelope"></i>
+                <input type="text" id="login-identity" placeholder="Email / No. Handphone" required>
+            </div>
+            <div class="hyva-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="login-password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="hyva-btn-submit gold">LOG IN</button>
+        </form>
+
+        <form id="form-daftar" class="hyva-auth-form" onsubmit="handleUserAuth(event, 'daftar')" style="display: none;">
+            <div class="hyva-input-group">
+                <i class="far fa-user"></i>
+                <input type="text" id="reg-name" placeholder="Nama Lengkap" required>
+            </div>
+            <div class="hyva-input-group">
+                <i class="far fa-envelope"></i>
+                <input type="email" id="reg-email" placeholder="Email" required>
+            </div>
+            <div class="hyva-input-group">
+                <i class="fas fa-phone-alt"></i>
+                <input type="tel" id="reg-phone" placeholder="No. Handphone" required>
+            </div>
+            <div class="hyva-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="reg-password" placeholder="Password Baru" required>
+            </div>
+            <button type="submit" class="hyva-btn-submit dark">DAFTAR SEKARANG</button>
+        </form>
+
+        <div class="hyva-divider">
+            <span>ATAU</span>
+        </div>
+
+        <button onclick="loginWithGoogle()" class="hyva-google-btn">
+            <img src="https://img.icons8.com/?size=96&id=17949&format=png" alt="Google">
+            <span>Masuk dengan Google</span>
+        </button>
+
+        <p id="auth-footer" class="hyva-auth-footer">
+            Baru di <span class="notranslate" translate="no">Hyva Arvm</span>? <a href="javascript:void(0)" onclick="showAuthTab('daftar')">Daftar</a>
+        </p>
+    </div>
+</div>
+
+<div id="cart-modal" class="modal">
+    <div class="cart-drawer">
+        <span class="close-icon" onclick="toggleCart()">&times;</span>
+        <h2 class="cart-title">Your Cart</h2>
+        
+        <div id="cart-items"></div>
+        
+        <div class="cart-footer">
+            <div class="total-row">
+                <span>Total</span>
+                <span id="total-price">Rp 0</span>
+            </div>
+            
+            <button onclick="checkoutOtomatis()" class="btn-payment-method">
+                <i class="fas fa-university"></i> BAYAR QRIS / TRANSFER BANK
+            </button>
+            
+            <button class="btn-wa-checkout" onclick="checkoutWA()">
+                <i class="fab fa-whatsapp"></i> CHECKOUT VIA WHATSAPP
+            </button>
+            
+            <button onclick="checkoutShopee()" class="btn-shopee">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fe/Shopee.svg" alt="Shopee Logo" class="shopee-logo">
+                <span>BUY ON SHOPEE</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="hyva-payment-modal" class="hyva-pay-modal" style="display: none;">
+    <div class="hyva-pay-content" style="max-width: 650px; margin: 50px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <div class="hyva-pay-header" style="background: #000; color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-family: 'Montserrat', sans-serif; letter-spacing: 1px;"><i class="fas fa-truck-moving"></i> PROSES PESANAN</h3>
+            <span class="close-pay" onclick="closeHyvaPayModal()" style="font-size: 28px; cursor: pointer; color: #fff; line-height: 1;">&times;</span>
+        </div>
+        
+        <div class="hyva-pay-body" style="padding: 25px;">
+            <div id="pay-step-address" style="display: block;">
+                <p class="pay-instruction" style="margin-bottom: 20px; font-size: 14px; color: #555;">Silakan lengkapi data pengiriman Anda dengan benar:</p>
+                
+                <div class="hyva-input-group" style="margin-bottom: 15px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 10px; background: #fafafa;">
+                    <i class="fas fa-user" style="color: #a68b5c;"></i>
+                    <input type="text" id="checkout-nama" placeholder="Nama Penerima" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" required>
+                </div>
+                
+                <div class="hyva-input-group" style="margin-bottom: 15px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: center; gap: 10px; background: #fafafa;">
+                    <i class="fas fa-phone" style="color: #a68b5c;"></i>
+                    <input type="tel" id="checkout-telepon" placeholder="No. WhatsApp Aktif" style="border: none; width: 100%; outline: none; background: transparent; font-family: 'Montserrat', sans-serif;" required>
+                </div>
+
+                <div class="hyva-form-group" style="margin-bottom: 15px;">
+                    <label for="checkout-provinsi" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-map"></i> Provinsi</label>
+                    <select id="checkout-provinsi" class="hyva-input-style" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none; color: #333;">
+                        <option value="">Pilih Provinsi</option>
+                    </select>
+                </div>
+                
+                <div class="hyva-form-group" style="margin-bottom: 15px;">
+                    <label for="checkout-kota" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-city"></i> Kota / Kabupaten</label>
+                    <select id="checkout-kota" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none; color: #333;">
+                        <option value="">Pilih Kota / Kabupaten</option>
+                    </select>
+                </div>
+                
+                <div class="hyva-form-group" style="margin-bottom: 15px;">
+                    <label for="checkout-kecamatan" style="display:block; margin-bottom:5px; font-weight:600; font-size:13px;"><i class="fas fa-home"></i> Kecamatan</label>
+                    <select id="checkout-kecamatan" class="hyva-input-style" disabled style="width:100%; padding:12px; border:1px solid #ddd; border-radius:6px; font-family:'Montserrat',sans-serif; background:#fafafa; outline:none; color: #333;">
+                        <option value="">Pilih Kecamatan</option>
+                    </select>
+                </div>
+
+                <div class="hyva-input-group" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 12px; border-radius: 6px; display: flex; align-items: flex-start; gap: 10px; background: #fafafa;">
+                    <i class="fas fa-map-marked-alt" style="color: #a68b5c; margin-top: 3px;"></i>
+                    <textarea id="checkout-detail-alamat" placeholder="Nama Jalan, No. Rumah, RT/RW, Ciri Rumah..." style="border: none; width: 100%; outline: none; resize: none; height: 70px; background: transparent; font-family: 'Montserrat', sans-serif;" required></textarea>
+                </div>
+
+                <button type="button" onclick="saveShippingAddress()" class="btn-confirm-pay" style="width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; transition: background 0.3s;">
+                    SIMPAN ALAMAT & LANJUT
+                </button>
+            </div>
+
+            <div id="pay-step-qris" style="display: none;">
+                <p class="pay-instruction" style="text-align: center; font-size: 14px; color: #555;">Silakan scan kode QRIS di bawah ini untuk menyelesaikan pesanan Anda</p>
+                <div class="qris-container" style="text-align: center; margin: 20px 0;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QRIS Hyva Arvm" class="qris-img" style="width: 220px; height: 220px; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
+                    <div class="qris-logo-overlay" style="font-weight: bold; margin-top: 8px; color: #a68b5c; font-size: 14px; letter-spacing: 1px;">QRIS RESMI HYVA ARVM</div>
+                </div>
+                <div class="pay-details" style="text-align: center; margin-bottom: 20px; background: #fdfaf4; padding: 15px; border-radius: 6px; border: 1px dashed #e6daf2;">
+                    <span class="total-label" style="font-size: 11px; color: #888; letter-spacing: 1px; display: block; margin-bottom: 4px;">TOTAL TAGIHAN</span>
+                    <h2 id="qris-total" style="color: #a68b5c; margin: 0; font-size: 26px;">Rp 0</h2>
+                </div>
+                <button onclick="confirmPayment()" class="btn-confirm-pay" style="width: 100%; padding: 15px; background: #a68b5c; color: #fff; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Montserrat', sans-serif;">
+                    SAYA SUDAH BAYAR VIA QRIS
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="qris-modal" class="hyva-pay-modal">
+    <div class="hyva-pay-content">
+        <div class="hyva-pay-header">
+            <h3>METODE PEMBAYARAN</h3>
+            <span class="close-pay" onclick="closePayModal()">&times;</span>
+        </div>
+        
+        <div class="hyva-pay-body">
+            <p class="pay-instruction">Silakan scan kode QRIS di bawah ini untuk menyelesaikan pesanan Anda</p>
+            
+            <div class="qris-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QRIS Hyva Arvm" class="qris-img">
+                <div class="qris-logo-overlay">QRIS</div>
+            </div>
+
+            <div class="pay-details">
+                <span class="total-label">TOTAL TAGIHAN</span>
+                <h2 id="qris-total-alt">Rp 0</h2>
+            </div>
+
+            <div class="bank-info">
+                <p>Atau Transfer Bank: <strong>BCA 123456789</strong></p>
+                <p>A/N: <strong class="notranslate" translate="no">HYVA ARVM OFFICIAL</strong></p>
+            </div>
+
+            <button onclick="confirmPayment()" class="btn-confirm-pay">SAYA SUDAH BAYAR</button>
+        </div>
+    </div>
+</div>
+
+<div id="product-detail-modal" class="modal">
+    <div class="modal-content detail-content" style="max-width: 900px; display: flex; flex-direction: row; gap: 30px; align-items: flex-start;">
+        <span class="close" onclick="closeDetail()" style="position: absolute; right: 20px; top: 10px; cursor: pointer; font-size: 28px;">&times;</span>
+        <div class="modal-left" style="flex: 1;">
+            <img id="detail-img" src="" alt="Parfum" style="width: 100%; height: auto; border-radius: 8px; object-fit: cover;">
+        </div>
+        <div class="modal-right" style="flex: 1; text-align: left; display: flex; flex-direction: column;">
+            <p class="detail-brand notranslate" translate="no" id="detail-brand" style="font-size: 12px; color: #888; letter-spacing: 2px; margin-bottom: 5px;"></p>
+            <h2 id="detail-name" style="font-family: 'Playfair Display', serif; font-size: 28px; margin: 0 0 10px 0;"></h2>
+            <p class="detail-price" id="detail-price" style="font-size: 20px; font-weight: bold; color: #a68b5c; margin-bottom: 20px;"></p>
+            <div class="detail-description" style="border-top: 1px solid #eee; padding-top: 15px;">
+                <h4 style="font-size: 11px; color: #555; letter-spacing: 1px;">DESCRIPTION</h4>
+                <p id="detail-desc" style="font-size: 14px; color: #666; line-height: 1.6;"></p>
+            </div>
+            <div class="detail-notes" style="margin-top: 20px;">
+                <h4 style="font-size: 11px; color: #555; letter-spacing: 1px;">LONGEVITY</h4>
+                <div class="longevity-bar" style="background: #eee; height: 8px; border-radius: 4px; margin: 8px 0;">
+                    <div id="bar-fill" style="background: #333; height: 100%; border-radius: 4px; width: 80%;"></div>
+                </div>
+                <p id="longevity-text" style="font-size: 12px; color: #777;">Longevity: 4-12 Hours</p>
+            </div>
+            <div class="detail-notes" style="margin-top: 20px;">
+                <h4 style="font-size: 11px; color: #555; letter-spacing: 1px;">FRAGRANCE NOTES</h4>
+                <div class="notes-grid" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; font-size: 13px;">
+                    <div class="note-row" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <strong style="width: 50px;">Top:</strong> 
+                        <span id="note-top" style="flex: 1; color: #666;"></span>
+                        <span id="stars-top" class="stars" style="color: #a68b5c; letter-spacing: 2px;"></span>
+                    </div>
+                    <div class="note-row" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <strong style="width: 50px;">Heart:</strong> 
+                        <span id="note-heart" style="flex: 1; color: #666;"></span>
+                        <span id="stars-heart" class="stars" style="color: #a68b5c; letter-spacing: 2px;"></span>
+                    </div>
+                    <div class="note-row" style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <strong style="width: 50px;">Base:</strong> 
+                        <span id="note-base" style="flex: 1; color: #666;"></span>
+                        <span id="stars-base" class="stars" style="color: #a68b5c; letter-spacing: 2px;"></span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-add" id="add-to-bag-btn" style="margin-top: 30px; width: 100%; padding: 15px; background: #000; color: #fff; border: none; cursor: pointer; font-weight: bold; letter-spacing: 2px;">
+                <i class="fas fa-shopping-cart"></i> ADD TO CART
+            </button>
+        </div>
+    </div>
+</div>
+
+<a href="https://wa.me/6282245556161" class="whatsapp-float" target="_blank">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp">
+    <span>Chat Admin</span>
+</a>
+
+<footer class="main-footer">
+    <div class="footer-container">
+        <div class="footer-column">
+            <h3 class="notranslate" translate="no" onclick="refreshToTop(event)" style="cursor: pointer; display: inline-block;">HYVA ARVM</h3>
+            <p>Luxury Fragrance for your daily lifestyle. Premium quality, inspired by world-class scents.</p>
+            <div class="social-links">
+                <a href="https://instagram.com/hyva_arvm" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://tiktok.com/@hyva_arvm" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
+                <a href="https://facebook.com" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-column">
+            <h4>Navigasi</h4>
+            <ul>
+                <li><a href="#">Shop All</a></li>
+                <li><a href="#">Parfum Wanita</a></li>
+                <li><a href="#">Parfum Pria</a></li>
+                <li><a href="#">Tentang Kami</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-column">
+            <h4>Kontak & Alamat</h4>
+            <p><i class="fas fa-map-marker-alt"></i> Mojokerto, Jawa Timur</p>
+            <p><i class="fab fa-whatsapp"></i> +62 82245556161</p>
+            <p><i class="far fa-envelope"></i> admin@hyvaarvm.com</p>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2026 <span class="notranslate" translate="no">Hyva Arvm</span> | Luxury Experience</p>
+    </div>
+</footer>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="wilayah-api.js" defer></script>
+<script src="script.js" defer></script>
+</body>
+</html>
