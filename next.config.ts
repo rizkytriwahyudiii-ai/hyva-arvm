@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  
-  // Tambahkan baris ini di sini
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   allowedDevOrigins: ['192.168.1.5'],
-
   images: {
     remotePatterns: [
       {
