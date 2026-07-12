@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
-import { getAuthenticatedUser } from '../lib/auth';
-import { sendSuccess, sendError } from '../lib/errors';
+import { getAuthenticatedUser } from '@/app/api/lib/auth';
+import { sendSuccess, sendError } from '@/app/api/lib/errors';
 import { validateOrderItems } from '@/lib/validation';
 
 interface ValidatePaymentRequest {
